@@ -344,7 +344,7 @@ Archivo procesado: `{archivo or 'N/A'}`
 Partes concatenadas: {partes or 'Todas las partes splitter'}
 Métricas: {metrics_str}
 Fecha y hora: {now_str}
-Auditor: Arodi / Zarevsk (Agent Bridge)
+Auditor: Arodi / Ismael (Agent Bridge)
 
 Estado de Validación:
 - Suite de auditoría: Completada y verificada
