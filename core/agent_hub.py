@@ -496,11 +496,11 @@ def main() -> None:
             return
 
         if paste_to_discord:
-            ok = paste_to_discord(content, channel_keyword="issues")
+            ok = paste_to_discord(content, channel_keyword="issues", send_enter=True)
             if ok:
-                cprint("🚀 [OK] Pegado exitosamente en la ventana de Discord (#issues)!", COLOR_BOLD + COLOR_GREEN)
+                cprint("[OK] Reporte pegado y ENVIADO exitosamente en Discord (#issues)!", COLOR_BOLD + COLOR_GREEN)
             else:
-                cprint("[!] No se pudo enfocar o pegar automáticamente.", COLOR_RED)
+                cprint("[!] No se pudo enfocar o enviar automáticamente.", COLOR_RED)
         else:
             cprint("[!] Módulo discord_tools no disponible en esta plataforma.", COLOR_RED)
     elif subcmd in ["help", "--help", "-h"]:

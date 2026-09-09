@@ -88,10 +88,10 @@ def find_discord_windows(channel_keyword: str = "issues") -> List[Tuple[int, str
 
     return results
 
-def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues") -> bool:
+def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues", send_enter: bool = True) -> bool:
     """
-    Brings Discord to foreground and simulates Ctrl+V.
-    If text is provided, it is first placed onto the Windows clipboard.
+    Brings Discord to foreground, clears existing message box, pastes Ctrl+V,
+    and optionally presses Enter to send the message automatically.
     """
     if sys.platform != "win32":
         return False
@@ -142,6 +142,7 @@ def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues"
     VK_A = 0x41
     VK_BACK = 0x08
     VK_V = 0x56
+    VK_RETURN = 0x0D
 
     # 1. Clear any existing text in the Discord message box (Ctrl+A -> Backspace)
     user32.keybd_event(VK_CONTROL, 0, 0, 0)
@@ -167,6 +168,13 @@ def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues"
     time.sleep(0.03)
     user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
 
+    # 3. Automatically send by simulating Enter if requested
+    if send_enter:
+        time.sleep(0.25)
+        user32.keybd_event(VK_RETURN, 0, 0, 0)
+        time.sleep(0.04)
+        user32.keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0)
+
     return True
 
 if __name__ == "__main__":
@@ -177,8 +185,8 @@ if __name__ == "__main__":
             content = target_path.read_text(encoding="utf-8", errors="replace")
         else:
             content = " ".join(sys.argv[1:])
-        ok = paste_to_discord(content)
+        ok = paste_to_discord(content, send_enter=True)
     else:
-        # Paste whatever is currently in clipboard
-        ok = paste_to_discord()
-    print("PASTED" if ok else "FAILED")
+        # Paste whatever is currently in clipboard and send
+        ok = paste_to_discord(send_enter=True)
+    print("SENT" if ok else "FAILED")
