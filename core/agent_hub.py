@@ -580,6 +580,7 @@ def main() -> None:
             cprint("[!] Debes especificar el comando después de 'run'.", COLOR_RED)
     elif subcmd in ["paste", "--paste", "paste-discord"]:
         target = args[1] if len(args) > 1 else str(PROJECT_DIR / "reports" / "issues" / "issue_punt_spacing_import.md")
+        channel_kw = args[2] if len(args) > 2 else ("bitacora" if "bitacora" in target.lower() else "issues")
         t_path = Path(target)
         if t_path.exists() and t_path.is_file():
             content = t_path.read_text(encoding="utf-8", errors="replace")
@@ -591,9 +592,9 @@ def main() -> None:
             return
 
         if paste_to_discord:
-            ok = paste_to_discord(content, channel_keyword="issues", send_enter=True)
+            ok = paste_to_discord(content, channel_keyword=channel_kw, send_enter=True)
             if ok:
-                cprint("[OK] Reporte pegado y ENVIADO exitosamente en Discord (#issues)!", COLOR_BOLD + COLOR_GREEN)
+                cprint(f"[OK] Reporte pegado y ENVIADO exitosamente en Discord (#{channel_kw})!", COLOR_BOLD + COLOR_GREEN)
             else:
                 cprint("[!] No se pudo enfocar o enviar automáticamente.", COLOR_RED)
         else:
