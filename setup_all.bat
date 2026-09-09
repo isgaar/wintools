@@ -45,7 +45,7 @@ goto :MENU
 :OPT_ALL
 call "%SCRIPT_DIR%\installers\install_git.bat" --nopause
 call "%SCRIPT_DIR%\installers\install_epub_deps.bat"
-call "%SCRIPT_DIR%\core\configurar_aliases_cmd.bat"
+call "%SCRIPT_DIR%\core\configure_cmd_aliases.bat"
 goto :END
 
 :OPT_DEPS
@@ -53,7 +53,7 @@ call "%SCRIPT_DIR%\installers\install_epub_deps.bat"
 goto :END
 
 :OPT_ALIASES
-call "%SCRIPT_DIR%\core\configurar_aliases_cmd.bat"
+call "%SCRIPT_DIR%\core\configure_cmd_aliases.bat"
 goto :END
 
 :OPT_GIT

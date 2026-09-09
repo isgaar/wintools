@@ -336,7 +336,7 @@ def audit_runner_flow() -> None:
 
 def show_instructions_flow() -> None:
     print_header("INSTRUCCIONES PARA AUDITAR — REGLAS Y DISCORD", "Canal #instrucciones-para-auditar (epubs)")
-    rules_file = ROOT_DIR / "docs" / "instrucciones_auditoria.md"
+    rules_file = ROOT_DIR / "docs" / "audit_instructions.md"
     if rules_file.exists():
         content = rules_file.read_text(encoding="utf-8", errors="replace")
         print(content)
@@ -361,7 +361,16 @@ def show_instructions_flow() -> None:
             append_text = f"\n- **[{now_str}] (Arodi)**: {nueva_nota}\n"
             with open(rules_file, "a", encoding="utf-8") as f:
                 f.write(append_text)
-            cprint("\n[OK] Indicación guardada en instrucciones_auditoria.md", COLOR_GREEN)
+            cprint("\n[OK] Indicación guardada en docs/audit_instructions.md", COLOR_GREEN)
+
+def show_context_flow() -> None:
+    print_header("CONTEXTO ACTUAL GUARDADO (AHORRO DE TOKENS)", "Directorio context/")
+    context_file = ROOT_DIR / "context" / "latest_shift_diagnostic.md"
+    if context_file.exists():
+        content = context_file.read_text(encoding="utf-8", errors="replace")
+        print(content)
+    else:
+        cprint("[!] No se encontró archivo de contexto en context/.", COLOR_RED)
 
 def interactive_menu() -> None:
     while True:
@@ -370,17 +379,18 @@ def interactive_menu() -> None:
         print()
         print(" [1] 🎮 Abrir / Enfocar Discord (Servidor 'epubs')")
         print(" [2] 📜 Ver / Actualizar instrucciones de auditoría (#instrucciones-para-auditar)")
-        print(" [3] 🔍 Ver estado de Git en epub-generator")
-        print(" [4] 📄 Ver Diff detallado de cambios")
-        print(" [5] 🛡️  Realizar Commit seguro (Aprobación estricta de Arodi)")
-        print(" [6] 🛠️  Ejecutar Auditoría / Grammar / Suite (Paso a paso)")
-        print(" [7] 🚨 Redactar y copiar reporte para canal #issues")
-        print(" [8] ⚡ Ejecutar comando manual en epub-generator (con aprobación)")
+        print(" [3] 💾 Ver contexto guardado (context/ - Ahorro de tokens)")
+        print(" [4] 🔍 Ver estado de Git en epub-generator")
+        print(" [5] 📄 Ver Diff detallado de cambios")
+        print(" [6] 🛡️  Realizar Commit seguro (Aprobación estricta de Arodi)")
+        print(" [7] 🛠️  Ejecutar Auditoría / Grammar / Suite (Paso a paso)")
+        print(" [8] 🚨 Redactar y copiar reporte para canal #issues")
+        print(" [9] ⚡ Ejecutar comando manual en epub-generator (con aprobación)")
         print(" [0] 🚪 Salir")
         print()
 
         try:
-            choice = input(" Selecciona una opción [0-8]: ").strip()
+            choice = input(" Selecciona una opción [0-9]: ").strip()
         except (KeyboardInterrupt, EOFError):
             print()
             break
@@ -390,16 +400,18 @@ def interactive_menu() -> None:
         elif choice == "2":
             show_instructions_flow()
         elif choice == "3":
-            show_git_status()
+            show_context_flow()
         elif choice == "4":
-            show_git_diff()
+            show_git_status()
         elif choice == "5":
-            safe_commit_flow()
+            show_git_diff()
         elif choice == "6":
-            audit_runner_flow()
+            safe_commit_flow()
         elif choice == "7":
-            create_issue_flow()
+            audit_runner_flow()
         elif choice == "8":
+            create_issue_flow()
+        elif choice == "9":
             cmd = input("Comando a ejecutar en epub-generator: ").strip()
             if cmd:
                 run_project_command(cmd, "Comando manual", "Ejecución manual solicitada por el usuario")
@@ -425,6 +437,8 @@ def main() -> None:
         open_discord()
     elif subcmd in ["rules", "instructions", "instrucciones"]:
         show_instructions_flow()
+    elif subcmd in ["context", "contexto", "ctx"]:
+        show_context_flow()
     elif subcmd in ["status", "--status", "st"]:
         show_git_status()
     elif subcmd in ["diff", "--diff", "df"]:

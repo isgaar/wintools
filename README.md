@@ -14,12 +14,14 @@ windows-scripts/
 ├── .gitignore                         # Exclusiones de Git
 ├── core/
 │   ├── agent_hub.py                   # Motor interactivo del agente y puente de seguridad
-│   └── configurar_aliases_cmd.bat     # Gestor de macros y comandos globales en el PATH
+│   └── configure_cmd_aliases.bat      # Gestor de macros y comandos globales en el PATH
 ├── installers/
 │   ├── install_epub_deps.bat          # Verificador de entorno, .venv y dependencias
 │   └── install_git.bat                # Verificador e instalador silencioso de Git
-└── docs/
-    └── instrucciones_auditoria.md     # Flujo oficial y reglas de Discord (#instrucciones-para-auditar)
+├── docs/
+│   └── audit_instructions.md          # Flujo oficial y reglas de Discord (#instrucciones-para-auditar)
+└── context/
+    └── latest_shift_diagnostic.md     # Snapshot del estado de obras en turno para ahorro de tokens
 ```
 
 | Archivo | Ubicación | Descripción |
@@ -27,10 +29,11 @@ windows-scripts/
 | **`setup_all.bat`** | Raíz | Menú interactivo con todas las opciones (Git, dependencias, alias, agent). |
 | **`agent.bat`** | Raíz | Lanzador rápido del Agent Bridge para auditoría y control de pasos. |
 | **`agent_hub.py`** | `core/` | Motor Python: control paso a paso, puente Discord y guardia de commits. |
-| **`configurar_aliases_cmd.bat`** | `core/` | Registra macros persistentes en CMD y ejecutables globales (`agent`, `epub`, `ag`). |
+| **`configure_cmd_aliases.bat`** | `core/` | Registra macros persistentes en CMD y ejecutables globales (`agent`, `epub`, `ag`). |
 | **`install_epub_deps.bat`** | `installers/` | Crea `.venv` e instala dependencias de `epub-generator`. |
 | **`install_git.bat`** | `installers/` | Verifica y descarga Git para Windows. |
-| **`instrucciones_auditoria.md`** | `docs/` | Flujo oficial de trabajo y reglas aprendidas de Discord. |
+| **`audit_instructions.md`** | `docs/` | Flujo oficial de trabajo y reglas aprendidas de Discord. |
+| **`latest_shift_diagnostic.md`** | `context/` | Snapshot del diagnóstico y tareas en turno para evitar relecturas y ahorrar tokens. |
 
 ---
 
@@ -44,15 +47,18 @@ El script `agent` actúa como **puente de auditoría y orquestación interactiva
 3. **Integración con Discord (Servidor "epubs")**:
    - **`#instrucciones-para-auditar`**: Consulta las pautas de trabajo y lotes activos asignados por Arodi.
    - **`#issues`**: Canal oficial para reportar cualquier anomalía, fallo de pipeline o contradicción al triangular reportes. El asistente formatea el issue y lo copia automáticamente al portapapeles (`clip.exe`).
+4. **Persistencia de Contexto**: Guarda el estado actual en `context/latest_shift_diagnostic.md` para ahorrar tokens y no recalcular el estado desde cero.
 
 ### Comandos de `agent`:
 ```cmd
 agent               # Abre el menú interactivo con todas las opciones
 agent discord       # Abre/enfoca Discord y muestra canales (#instrucciones-para-auditar, #issues)
+agent instructions  # Muestra y registra instrucciones del canal #instrucciones-para-auditar
+agent context       # Muestra el último snapshot del contexto guardado (ahorro de tokens)
 agent status        # Verifica el estado de Git en epub-generator
 agent diff          # Muestra el diff detallado de cambios pendientes
 agent commit        # Flujo de commit seguro (inspección de diff + aprobación de Arodi)
-agent audit         # Menú interactivo de herramientas de auditoría (Grammar / Sanity)
+agent audit         # Menú interactivo de herramientas de auditoría (Grammar / Sanity / Suite)
 agent issue         # Generador guiado de reporte de inconsistencias para #issues
 agent run <comando> # Ejecuta cualquier comando con aprobación previa obligatoria
 ```
