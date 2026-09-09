@@ -44,6 +44,16 @@ Cuando tengas todas las obras maquetadas y mergeadas en un solo .txt:
 * En el paso final de maquetación con `generate-epub.prompt.md`:
   👉 **NUNCA asignar modo landscape** a los EPUBs (genera costes adicionales innecesarios).
 
+### 5. Regla de Entrega y Criterio de Aceptación: Canal `#bitácora` (Arodi - 15:14)
+* Cuando los archivos procesados cumplan satisfactoriamente el **criterio de aceptación** (auditoría completa, guiones corregidos bajo Regla 3.2, triangulación limpia y concatenación validada):
+  * **NO crear una rama de Git** para que Arodi revise el merge.
+  * **El registro formal de la entrega se publica directamente en el canal `#bitácora`** del servidor Discord `epubs`.
+  * El reporte en `#bitácora` debe detallar:
+    - Obra, autor, idioma y lote.
+    - Archivo final procesado (`01translator/books-translated/...`).
+    - Estado de validación de la suite (pasos aprobados).
+    - Métricas de aceptación: partes procesadas, líneas y caracteres.
+
 ---
 
 ## 🛡️ CONTROL HUMANO Y SEGURIDAD
@@ -51,3 +61,4 @@ Cuando tengas todas las obras maquetadas y mergeadas en un solo .txt:
 * **Aprobación Obligatoria Paso a Paso**: Todo comando se detiene para pedir confirmación `[s/N]` al usuario.
 * **Cero Commits No Autorizados**: No se ejecuta `git commit` hasta que Arodi examine el `git diff` y confirme con `ARODI`.
 * **Fuente de Verdad**: Las correcciones NUNCA se aplican directamente sobre el archivo concatenado en `01translator/books-translated/`. Se corrigen en las partes de `splitter/` y luego se re-ejecuta la concatenación.
+* **Entrega**: Toda entrega aceptada se reporta en `#bitácora`, no en ramas git separadas.

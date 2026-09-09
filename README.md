@@ -49,7 +49,8 @@ El script `agent` actúa como **puente de auditoría y orquestación interactiva
 3. **Integración y Automatización con Discord (Servidor "epubs")**:
    - **`#instrucciones-para-auditar`**: Consulta las pautas de trabajo y lotes activos asignados por Arodi.
    - **`#issues`**: Canal oficial para reportar cualquier anomalía, fallo de pipeline o contradicción al triangular reportes.
-   - **Pegado y Envío Automático (`agent paste`)**:
+   - **`#bitácora`**: Canal oficial para registrar entregas de obras/lotes procesados cuando cumplen el criterio de aceptación (**en lugar de crear ramas de Git separadas**).
+   - **Pegado y Envío Automático (`agent paste` / `agent bitacora`)**:
      - Conexión directa a la estación de ventana interactiva (`winsta0\default`).
      - Limpieza automática de la caja de mensajes (`Ctrl+A` + `Backspace`) para evitar concatenaciones o duplicados.
      - Formato sobrio y natural (sin emojis) con Markdown nativo para Discord (`python` syntax highlighting).
@@ -59,7 +60,7 @@ El script `agent` actúa como **puente de auditoría y orquestación interactiva
 ### Comandos de `agent`:
 ```cmd
 agent               # Abre el menú interactivo con todas las opciones
-agent discord       # Abre/enfoca Discord y muestra canales (#instrucciones-para-auditar, #issues)
+agent discord       # Abre/enfoca Discord y muestra canales (#instrucciones-para-auditar, #issues, #bitácora)
 agent instructions  # Muestra y registra instrucciones del canal #instrucciones-para-auditar
 agent context       # Muestra el último snapshot del contexto guardado (ahorro de tokens)
 agent status        # Verifica el estado de Git en epub-generator
@@ -67,6 +68,7 @@ agent diff          # Muestra el diff detallado de cambios pendientes
 agent commit        # Flujo de commit seguro (inspección de diff + aprobación de Arodi)
 agent audit         # Menú interactivo de herramientas de auditoría (Grammar / Sanity / Suite)
 agent issue         # Generador guiado de reporte de inconsistencias para #issues
+agent bitacora      # Registra formalmente una entrega en #bitácora tras cumplir criterio de aceptación
 agent paste [file]  # Pega limpiamente y envía en automático el reporte en el canal #issues de Discord
 agent run <comando> # Ejecuta cualquier comando con aprobación previa obligatoria
 ```

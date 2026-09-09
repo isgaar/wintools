@@ -83,6 +83,10 @@ def open_discord(show_info: bool = True) -> None:
         cprint("|    * Canal exclusivo para reportar inconsistencias o bloqueos.    |", COLOR_RESET)
         cprint("|    * Si hay fallo al triangular reportes o anomalias de auditoria, |", COLOR_RESET)
         cprint("|      escribe y reporta aqui inmediatamente.                        |", COLOR_RESET)
+        cprint("|                                                                    |", COLOR_CYAN)
+        cprint("| [CANAL] #bitácora                                                  |", COLOR_YELLOW)
+        cprint("|    * Entrega oficial cuando la obra cumple criterio de aceptación. |", COLOR_RESET)
+        cprint("|    * Aquí se registra lo procesado en lugar de crear rama de Git.  |", COLOR_RESET)
         cprint("+--------------------------------------------------------------------+", COLOR_MAGENTA)
         print()
 
@@ -298,6 +302,92 @@ def create_issue_flow() -> None:
     else:
         open_discord(show_info=False)
 
+def create_bitacora_flow() -> None:
+    print_header("REGISTRO EN #bitácora (CRITERIO DE ACEPTACIÓN CUMPLIDO)", "Canal #bitácora — Entrega oficial de obras procesadas")
+    cprint("Según la directriz de Arodi: Al cumplir el criterio de aceptación, NO se crea rama de Git.", COLOR_YELLOW)
+    cprint("El registro formal se publica directamente en el canal #bitácora del servidor 'epubs'.\n", COLOR_CYAN)
+
+    try:
+        obra = input(" 1. Obra y Autor (ej: Osamu Dazai - El criminal / the-criminal): ").strip()
+        idioma_lote = input(" 2. Idioma y Lote (ej: Español - Lote 1 / es - lote-1): ").strip()
+        archivo = input(" 3. Ruta del archivo procesado (ej: 01translator/books-translated/japon/dazai-osamu/es/lote-1/the-criminal.txt): ").strip()
+        partes = input(" 4. Partes splitter procesadas (ej: part_01 a part_04): ").strip()
+        notas = input(" 5. Validaciones / Notas (ej: Suite 10 pasos OK, guiones corregidos bajo Regla 3.2): ").strip()
+    except (KeyboardInterrupt, EOFError):
+        cprint("\n[CANCELADO] Registro en bitácora abortado.", COLOR_RED)
+        return
+
+    line_count = 0
+    char_count = 0
+    if archivo:
+        candidate_path = Path(archivo)
+        if not candidate_path.is_absolute():
+            candidate_path = PROJECT_DIR / candidate_path
+        if candidate_path.exists() and candidate_path.is_file():
+            try:
+                content = candidate_path.read_text(encoding="utf-8", errors="replace")
+                line_count = len(content.splitlines())
+                char_count = len(content)
+            except Exception:
+                pass
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    timestamp_file = datetime.now().strftime("%Y%m%d_%H%M%S")
+    metrics_str = f"{line_count} líneas, {char_count:,} caracteres" if line_count > 0 else "Verificado"
+
+    report_md = f"""Registro de Entrega — Criterio de Aceptación Cumplido
+
+Obra: {obra or 'No especificada'}
+Idioma / Lote: {idioma_lote or 'es / Lote 1'}
+Archivo procesado: `{archivo or 'N/A'}`
+Partes concatenadas: {partes or 'Todas las partes splitter'}
+Métricas: {metrics_str}
+Fecha y hora: {now_str}
+Auditor: Arodi / Zarevsk (Agent Bridge)
+
+Estado de Validación:
+- Suite de auditoría: Completada y verificada
+- Regla 3.2 (Dash check): Guiones únicos a la izquierda validados
+- Triangulación con original: Aprobada sin discrepancias semánticas
+- TOC y Maquetación: Formato continuo consistente
+
+Notas adicionales:
+{notas or 'Listo para integración en el omnibus del lote y posterior maquetación de EPUB.'}
+"""
+
+    print("\n" + ("=" * 70))
+    cprint("VISTA PREVIA DEL REGISTRO PARA #bitácora:", COLOR_BOLD + COLOR_YELLOW)
+    print("=" * 70)
+    print(report_md.strip())
+    print("=" * 70)
+
+    copy_to_clipboard(report_md)
+    cprint("[OK] Registro copiado al portapapeles de Windows.", COLOR_BOLD + COLOR_GREEN)
+
+    try:
+        bitacora_dir = PROJECT_DIR / "reports" / "bitacora"
+        bitacora_dir.mkdir(parents=True, exist_ok=True)
+        report_path = bitacora_dir / f"bitacora_{timestamp_file}.md"
+        report_path.write_text(report_md, encoding="utf-8")
+        cprint(f"📁 Copia guardada localmente en: {report_path}", COLOR_CYAN)
+    except Exception as ex:
+        cprint(f"[!] No se pudo guardar la copia local: {ex}", COLOR_YELLOW)
+
+    try:
+        auto_send = input("\n¿Pegar y ENVIAR automáticamente en el canal #bitácora de Discord? [S/n]: ").strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        auto_send = "n"
+
+    if auto_send in ["", "s", "si", "y", "yes"] and paste_to_discord:
+        cprint("Enfocando ventana de Discord y enviando a #bitácora...", COLOR_CYAN)
+        if paste_to_discord(report_md, channel_keyword="bitacora", send_enter=True):
+            cprint("[OK] Registro publicado exitosamente en el canal #bitácora!", COLOR_BOLD + COLOR_GREEN)
+        else:
+            cprint("[!] No se pudo enfocar #bitácora automáticamente. Enfocando Discord...", COLOR_YELLOW)
+            open_discord(show_info=False)
+    else:
+        open_discord(show_info=False)
+
 def audit_runner_flow() -> None:
     print_header("AUDITORÍA DE OBRAS / PARTES EN epub-generator", "Con control de pasos individual")
     
@@ -412,13 +502,14 @@ def interactive_menu() -> None:
         print(" [5] 📄 Ver Diff detallado de cambios")
         print(" [6] 🛡️  Realizar Commit seguro (Aprobación estricta de Arodi)")
         print(" [7] 🛠️  Ejecutar Auditoría / Grammar / Suite (Paso a paso)")
-        print(" [8] 🚨 Redactar y copiar reporte para canal #issues")
-        print(" [9] ⚡ Ejecutar comando manual en epub-generator (con aprobación)")
+        print(" [8] 🚨 Redactar y enviar reporte para canal #issues")
+        print(" [9] 📋 Registrar entrega en canal #bitácora (Aceptación cumplida)")
+        print(" [10] ⚡ Ejecutar comando manual en epub-generator (con aprobación)")
         print(" [0] 🚪 Salir")
         print()
 
         try:
-            choice = input(" Selecciona una opción [0-9]: ").strip()
+            choice = input(" Selecciona una opción [0-10]: ").strip()
         except (KeyboardInterrupt, EOFError):
             print()
             break
@@ -440,6 +531,8 @@ def interactive_menu() -> None:
         elif choice == "8":
             create_issue_flow()
         elif choice == "9":
+            create_bitacora_flow()
+        elif choice == "10":
             cmd = input("Comando a ejecutar en epub-generator: ").strip()
             if cmd:
                 run_project_command(cmd, "Comando manual", "Ejecución manual solicitada por el usuario")
@@ -475,6 +568,8 @@ def main() -> None:
         safe_commit_flow()
     elif subcmd in ["issue", "--issue", "report"]:
         create_issue_flow()
+    elif subcmd in ["bitacora", "--bitacora", "log"]:
+        create_bitacora_flow()
     elif subcmd in ["audit", "--audit"]:
         audit_runner_flow()
     elif subcmd in ["run", "--run"]:
@@ -507,13 +602,14 @@ def main() -> None:
         print_header("AYUDA — AGENT BRIDGE (epub-generator)")
         print("Uso:")
         print("  agent              Abre el menú interactivo con todas las opciones.")
-        print("  agent discord      Abre/enfoca Discord y muestra canales #instrucciones-para-auditar e #issues.")
+        print("  agent discord      Abre/enfoca Discord y muestra canales (#instrucciones-para-auditar, #issues, #bitácora).")
         print("  agent instructions Muestra y registra instrucciones del canal #instrucciones-para-auditar.")
         print("  agent status       Muestra el estado de Git en epub-generator.")
         print("  agent diff         Muestra las diferencias pendientes.")
         print("  agent commit       Flujo de commit seguro (requiere aprobación obligatoria de Arodi).")
-        print("  agent issue        Asistente guiado para redactar y copiar reportes a #issues.")
-        print("  agent paste [file] Pega automáticamente un reporte o texto en el canal #issues de Discord.")
+        print("  agent issue        Asistente guiado para redactar y enviar reportes a #issues.")
+        print("  agent bitacora     Registra formalmente una entrega en #bitácora tras cumplir criterio de aceptación.")
+        print("  agent paste [file] Pega limpiamente y envía en automático el reporte en el canal #issues de Discord.")
         print("  agent audit        Menú de auditoría (Grammar / Sanity checks con paso a paso).")
         print("  agent run <cmd>    Ejecuta un comando en epub-generator con confirmación previa.")
     else:

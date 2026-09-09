@@ -81,10 +81,15 @@ def find_discord_windows(channel_keyword: str = "issues") -> List[Tuple[int, str
 
     user32.EnumWindows(WNDENUMPROC(enum_cb), 0)
 
-    # Sort matching channel_keyword first
+    # Sort matching channel_keyword first (accent-insensitive)
     if channel_keyword:
-        kw = channel_keyword.lower()
-        results.sort(key=lambda item: 0 if kw in item[1].lower() else 1)
+        def strip_accents(s: str) -> str:
+            s = s.lower()
+            for a, b in [("á", "a"), ("é", "e"), ("í", "i"), ("ó", "o"), ("ú", "u"), ("ñ", "n")]:
+                s = s.replace(a, b)
+            return s
+        kw = strip_accents(channel_keyword)
+        results.sort(key=lambda item: 0 if kw in strip_accents(item[1]) else 1)
 
     return results
 
