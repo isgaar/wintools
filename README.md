@@ -60,6 +60,7 @@ agent diff          # Muestra el diff detallado de cambios pendientes
 agent commit        # Flujo de commit seguro (inspección de diff + aprobación de Arodi)
 agent audit         # Menú interactivo de herramientas de auditoría (Grammar / Sanity / Suite)
 agent issue         # Generador guiado de reporte de inconsistencias para #issues
+agent paste [file]  # Pega automáticamente el reporte en el canal #issues de Discord
 agent run <comando> # Ejecuta cualquier comando con aprobación previa obligatoria
 ```
 

@@ -11,6 +11,16 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 
+try:
+    from .discord_tools import paste_to_discord, set_clipboard_text, find_discord_windows
+except ImportError:
+    try:
+        from discord_tools import paste_to_discord, set_clipboard_text, find_discord_windows
+    except ImportError:
+        paste_to_discord = None
+        set_clipboard_text = None
+        find_discord_windows = None
+
 if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -189,6 +199,11 @@ def safe_commit_flow() -> None:
 
 def copy_to_clipboard(text: str) -> bool:
     try:
+        if set_clipboard_text and set_clipboard_text(text):
+            return True
+    except Exception:
+        pass
+    try:
         proc = subprocess.Popen(["clip"], stdin=subprocess.PIPE, text=True, encoding="utf-8")
         proc.communicate(text)
         return proc.returncode == 0
@@ -254,7 +269,6 @@ def create_issue_flow() -> None:
     copied = copy_to_clipboard(report_md)
     if copied:
         cprint("✨ [OK] Reporte COPIADO al portapapeles de Windows.", COLOR_BOLD + COLOR_GREEN)
-        cprint("   Puedes ir a Discord (#issues) y pegar con Ctrl+V.", COLOR_GREEN)
     else:
         cprint("[!] No se pudo copiar automáticamente. Puedes copiar el texto superior.", COLOR_YELLOW)
 
@@ -268,7 +282,21 @@ def create_issue_flow() -> None:
     except Exception as ex:
         cprint(f"[!] No se pudo guardar la copia local: {ex}", COLOR_YELLOW)
 
-    open_discord(show_info=False)
+    # Pegado automático en Discord
+    try:
+        auto_paste = input("\n¿Pegar automáticamente en la ventana de Discord (#issues)? [S/n]: ").strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        auto_paste = "n"
+
+    if auto_paste in ["", "s", "si", "y", "yes"] and paste_to_discord:
+        cprint("Lanzando enfoque y pegando en Discord...", COLOR_CYAN)
+        if paste_to_discord(report_md, channel_keyword="issues"):
+            cprint("🚀 [OK] Reporte PEGADO exitosamente en Discord (#issues)!", COLOR_BOLD + COLOR_GREEN)
+        else:
+            cprint("[!] No se pudo pegar automáticamente. Enfocando Discord...", COLOR_YELLOW)
+            open_discord(show_info=False)
+    else:
+        open_discord(show_info=False)
 
 def audit_runner_flow() -> None:
     print_header("AUDITORÍA DE OBRAS / PARTES EN epub-generator", "Con control de pasos individual")
@@ -455,6 +483,26 @@ def main() -> None:
             run_project_command(rest, "Comando CLI", "Ejecutado vía 'agent run'")
         else:
             cprint("[!] Debes especificar el comando después de 'run'.", COLOR_RED)
+    elif subcmd in ["paste", "--paste", "paste-discord"]:
+        target = args[1] if len(args) > 1 else str(PROJECT_DIR / "reports" / "issues" / "issue_punt_spacing_import.md")
+        t_path = Path(target)
+        if t_path.exists() and t_path.is_file():
+            content = t_path.read_text(encoding="utf-8", errors="replace")
+        else:
+            content = " ".join(args[1:]) if len(args) > 1 else ""
+
+        if not content:
+            cprint("[!] No se encontró contenido ni archivo para pegar.", COLOR_RED)
+            return
+
+        if paste_to_discord:
+            ok = paste_to_discord(content, channel_keyword="issues")
+            if ok:
+                cprint("🚀 [OK] Pegado exitosamente en la ventana de Discord (#issues)!", COLOR_BOLD + COLOR_GREEN)
+            else:
+                cprint("[!] No se pudo enfocar o pegar automáticamente.", COLOR_RED)
+        else:
+            cprint("[!] Módulo discord_tools no disponible en esta plataforma.", COLOR_RED)
     elif subcmd in ["help", "--help", "-h"]:
         print_header("AYUDA — AGENT BRIDGE (epub-generator)")
         print("Uso:")
@@ -465,6 +513,7 @@ def main() -> None:
         print("  agent diff         Muestra las diferencias pendientes.")
         print("  agent commit       Flujo de commit seguro (requiere aprobación obligatoria de Arodi).")
         print("  agent issue        Asistente guiado para redactar y copiar reportes a #issues.")
+        print("  agent paste [file] Pega automáticamente un reporte o texto en el canal #issues de Discord.")
         print("  agent audit        Menú de auditoría (Grammar / Sanity checks con paso a paso).")
         print("  agent run <cmd>    Ejecuta un comando en epub-generator con confirmación previa.")
     else:
