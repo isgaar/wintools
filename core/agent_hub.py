@@ -12,14 +12,15 @@ from pathlib import Path
 from datetime import datetime
 
 try:
-    from .discord_tools import paste_to_discord, set_clipboard_text, find_discord_windows
+    from .discord_tools import paste_to_discord, set_clipboard_text, find_discord_windows, upload_files_to_discord
 except ImportError:
     try:
-        from discord_tools import paste_to_discord, set_clipboard_text, find_discord_windows
+        from discord_tools import paste_to_discord, set_clipboard_text, find_discord_windows, upload_files_to_discord
     except ImportError:
         paste_to_discord = None
         set_clipboard_text = None
         find_discord_windows = None
+        upload_files_to_discord = None
 
 if sys.platform == "win32":
     try:
@@ -382,6 +383,19 @@ Notas adicionales:
         cprint("Enfocando ventana de Discord y enviando a #bitácora...", COLOR_CYAN)
         if paste_to_discord(report_md, channel_keyword="bitacora", send_enter=True):
             cprint("[OK] Registro publicado exitosamente en el canal #bitácora!", COLOR_BOLD + COLOR_GREEN)
+            
+            # Preguntar para adjuntar archivo
+            if candidate_path and candidate_path.exists() and upload_files_to_discord:
+                try:
+                    upload_ans = input(f"\n¿Adjuntar y subir el archivo procesado ({candidate_path.name}) a #bitácora? [S/n]: ").strip().lower()
+                except (KeyboardInterrupt, EOFError):
+                    upload_ans = "n"
+                if upload_ans in ["", "s", "si", "y", "yes"]:
+                    cprint(f"Subiendo {candidate_path.name} a #bitácora...", COLOR_CYAN)
+                    if upload_files_to_discord([str(candidate_path)], channel_keyword="bitacora"):
+                        cprint(f"[OK] Archivo {candidate_path.name} subido exitosamente a #bitácora!", COLOR_BOLD + COLOR_GREEN)
+                    else:
+                        cprint("[!] No se pudo subir el archivo automáticamente.", COLOR_RED)
         else:
             cprint("[!] No se pudo enfocar #bitácora automáticamente. Enfocando Discord...", COLOR_YELLOW)
             open_discord(show_info=False)
@@ -599,6 +613,22 @@ def main() -> None:
                 cprint("[!] No se pudo enfocar o enviar automáticamente.", COLOR_RED)
         else:
             cprint("[!] Módulo discord_tools no disponible en esta plataforma.", COLOR_RED)
+    elif subcmd in ["upload", "--upload", "share", "--share"]:
+        target = args[1] if len(args) > 1 else str(PROJECT_DIR / "01translator" / "books-translated" / "japon" / "dazai-osamu" / "es" / "lote-1" / "the-criminal.txt")
+        channel_kw = args[2] if len(args) > 2 else "bitacora"
+        t_path = Path(target)
+        if t_path.exists() and t_path.is_file():
+            if upload_files_to_discord:
+                cprint(f"Subiendo {t_path.name} al canal #{channel_kw}...", COLOR_CYAN)
+                ok = upload_files_to_discord([str(t_path)], channel_keyword=channel_kw)
+                if ok:
+                    cprint(f"[OK] Archivo {t_path.name} subido exitosamente a #{channel_kw}!", COLOR_BOLD + COLOR_GREEN)
+                else:
+                    cprint("[!] No se pudo subir el archivo.", COLOR_RED)
+            else:
+                cprint("[!] Función upload_files_to_discord no disponible.", COLOR_RED)
+        else:
+            cprint(f"[!] Archivo no encontrado: {target}", COLOR_RED)
     elif subcmd in ["help", "--help", "-h"]:
         print_header("AYUDA — AGENT BRIDGE (epub-generator)")
         print("Uso:")
@@ -610,6 +640,7 @@ def main() -> None:
         print("  agent commit       Flujo de commit seguro (requiere aprobación obligatoria de Arodi).")
         print("  agent issue        Asistente guiado para redactar y enviar reportes a #issues.")
         print("  agent bitacora     Registra formalmente una entrega en #bitácora tras cumplir criterio de aceptación.")
+        print("  agent share [file] Adjunta y sube directamente un archivo procesado (.txt) a #bitácora.")
         print("  agent paste [file] Pega limpiamente y envía en automático el reporte en el canal #issues de Discord.")
         print("  agent audit        Menú de auditoría (Grammar / Sanity checks con paso a paso).")
         print("  agent run <cmd>    Ejecuta un comando en epub-generator con confirmación previa.")

@@ -182,6 +182,124 @@ def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues"
 
     return True
 
+def set_clipboard_files(paths: List[str]) -> bool:
+    """Sets a list of file paths onto Windows clipboard as CF_HDROP."""
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    from ctypes import wintypes
+
+    user32 = ctypes.windll.user32
+    kernel32 = ctypes.windll.kernel32
+
+    abs_paths = [os.path.abspath(p) for p in paths if os.path.exists(p)]
+    if not abs_paths:
+        return False
+
+    CF_HDROP = 15
+    GMEM_MOVEABLE = 0x0002
+    GMEM_ZEROINIT = 0x0040
+
+    class DROPFILES(ctypes.Structure):
+        _fields_ = [
+            ("pFiles", wintypes.DWORD),
+            ("pt", wintypes.POINT),
+            ("fNC", wintypes.BOOL),
+            ("fWide", wintypes.BOOL),
+        ]
+
+    buf = "".join(p + "\0" for p in abs_paths) + "\0"
+    encoded_paths = buf.encode("utf-16le")
+
+    dropfiles = DROPFILES()
+    dropfiles.pFiles = ctypes.sizeof(DROPFILES)
+    dropfiles.pt.x = 0
+    dropfiles.pt.y = 0
+    dropfiles.fNC = False
+    dropfiles.fWide = True
+
+    total_size = ctypes.sizeof(DROPFILES) + len(encoded_paths)
+    h_mem = kernel32.GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, total_size)
+    if not h_mem:
+        return False
+    ptr = kernel32.GlobalLock(h_mem)
+    if not ptr:
+        return False
+
+    ctypes.memmove(ptr, ctypes.byref(dropfiles), ctypes.sizeof(DROPFILES))
+    ctypes.memmove(ptr + ctypes.sizeof(DROPFILES), encoded_paths, len(encoded_paths))
+    kernel32.GlobalUnlock(h_mem)
+
+    hwinsta = user32.OpenWindowStationW("winsta0", False, 0x37F)
+    if hwinsta:
+        user32.SetProcessWindowStation(hwinsta)
+        hdesk = user32.OpenDesktopW("default", 0, False, 0x1FF)
+        if hdesk:
+            user32.SetThreadDesktop(hdesk)
+
+    if not user32.OpenClipboard(None):
+        return False
+    try:
+        user32.EmptyClipboard()
+        res = user32.SetClipboardData(CF_HDROP, h_mem)
+        return bool(res)
+    finally:
+        user32.CloseClipboard()
+
+def upload_files_to_discord(file_paths: List[str], channel_keyword: str = "bitacora") -> bool:
+    """Attaches files via CF_HDROP and uploads them directly to the Discord channel."""
+    if not set_clipboard_files(file_paths):
+        return False
+
+    import ctypes
+    user32 = ctypes.windll.user32
+    kernel32 = ctypes.windll.kernel32
+
+    windows = find_discord_windows(channel_keyword=channel_keyword)
+    if not windows:
+        return False
+
+    target_hwnd, target_title = windows[0]
+
+    current_thread = kernel32.GetCurrentThreadId()
+    target_thread = user32.GetWindowThreadProcessId(target_hwnd, None)
+
+    user32.AttachThreadInput(current_thread, target_thread, True)
+    user32.ShowWindow(target_hwnd, 9)
+    user32.SetForegroundWindow(target_hwnd)
+    user32.SetFocus(target_hwnd)
+    user32.AttachThreadInput(current_thread, target_thread, False)
+
+    VK_MENU = 0x12
+    KEYEVENTF_KEYUP = 0x0002
+    user32.keybd_event(VK_MENU, 0, 0, 0)
+    user32.keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0)
+    user32.SetForegroundWindow(target_hwnd)
+
+    time.sleep(0.4)
+
+    # Paste file into Discord
+    VK_CONTROL = 0x11
+    VK_V = 0x56
+    VK_RETURN = 0x0D
+
+    user32.keybd_event(VK_CONTROL, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_V, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+
+    time.sleep(0.8)
+
+    # Press Enter to upload
+    user32.keybd_event(VK_RETURN, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0)
+
+    return True
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         arg = sys.argv[1]
@@ -192,6 +310,5 @@ if __name__ == "__main__":
             content = " ".join(sys.argv[1:])
         ok = paste_to_discord(content, send_enter=True)
     else:
-        # Paste whatever is currently in clipboard and send
         ok = paste_to_discord(send_enter=True)
     print("SENT" if ok else "FAILED")
