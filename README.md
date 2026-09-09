@@ -13,10 +13,11 @@ windows-scripts/
 ├── README.md                          # Documentación del repositorio
 ├── .gitignore                         # Exclusiones de Git
 ├── core/
-│   ├── agent_hub.py                   # Motor interactivo del agente y puente de seguridad
-│   └── configure_cmd_aliases.bat      # Gestor de macros y comandos globales en el PATH
+│   ├── agent_hub.py                   # Orquestador del puente interactivo, control de pasos y seguridad
+│   ├── configure_cmd_aliases.bat      # Inyector de macros y ejecutables globales en Antigravity IDE/bin
+│   └── discord_tools.py               # Automatización Win32: enfoque, limpieza de buffer, pegado y envío en Discord
 ├── installers/
-│   ├── install_epub_deps.bat          # Verificador de entorno, .venv y dependencias
+│   ├── install_epub_deps.bat          # Creador de .venv e instalador de dependencias de Python
 │   └── install_git.bat                # Verificador e instalador silencioso de Git
 ├── docs/
 │   └── audit_instructions.md          # Flujo oficial y reglas de Discord (#instrucciones-para-auditar)
@@ -29,6 +30,7 @@ windows-scripts/
 | **`setup_all.bat`** | Raíz | Menú interactivo con todas las opciones (Git, dependencias, alias, agent). |
 | **`agent.bat`** | Raíz | Lanzador rápido del Agent Bridge para auditoría y control de pasos. |
 | **`agent_hub.py`** | `core/` | Motor Python: control paso a paso, puente Discord y guardia de commits. |
+| **`discord_tools.py`** | `core/` | Automatización de escritorio Win32: conexión a `winsta0\default`, pegado limpio y auto-envío en Discord. |
 | **`configure_cmd_aliases.bat`** | `core/` | Registra macros persistentes en CMD y ejecutables globales (`agent`, `epub`, `ag`). |
 | **`install_epub_deps.bat`** | `installers/` | Crea `.venv` e instala dependencias de `epub-generator`. |
 | **`install_git.bat`** | `installers/` | Verifica y descarga Git para Windows. |
@@ -44,9 +46,14 @@ El script `agent` actúa como **puente de auditoría y orquestación interactiva
 ### Reglas Clave Integradas:
 1. **Aprobación Obligatoria Paso a Paso**: Todo comando, auditoría o modificación ejecutada sobre `epub-generator` requiere confirmación explícita del usuario (`[s/N]`).
 2. **Guardia Estricto de Commits**: **Ningún commit se realiza automáticamente**. Muestra el diff detallado y exige autorización explícita de Arodi (`ARODI`).
-3. **Integración con Discord (Servidor "epubs")**:
+3. **Integración y Automatización con Discord (Servidor "epubs")**:
    - **`#instrucciones-para-auditar`**: Consulta las pautas de trabajo y lotes activos asignados por Arodi.
-   - **`#issues`**: Canal oficial para reportar cualquier anomalía, fallo de pipeline o contradicción al triangular reportes. El asistente formatea el issue y lo copia automáticamente al portapapeles (`clip.exe`).
+   - **`#issues`**: Canal oficial para reportar cualquier anomalía, fallo de pipeline o contradicción al triangular reportes.
+   - **Pegado y Envío Automático (`agent paste`)**:
+     - Conexión directa a la estación de ventana interactiva (`winsta0\default`).
+     - Limpieza automática de la caja de mensajes (`Ctrl+A` + `Backspace`) para evitar concatenaciones o duplicados.
+     - Formato sobrio y natural (sin emojis) con Markdown nativo para Discord (`python` syntax highlighting).
+     - Envío automático mediante simulación de <kbd>Enter</kbd>.
 4. **Persistencia de Contexto**: Guarda el estado actual en `context/latest_shift_diagnostic.md` para ahorrar tokens y no recalcular el estado desde cero.
 
 ### Comandos de `agent`:
@@ -60,7 +67,7 @@ agent diff          # Muestra el diff detallado de cambios pendientes
 agent commit        # Flujo de commit seguro (inspección de diff + aprobación de Arodi)
 agent audit         # Menú interactivo de herramientas de auditoría (Grammar / Sanity / Suite)
 agent issue         # Generador guiado de reporte de inconsistencias para #issues
-agent paste [file]  # Pega automáticamente el reporte en el canal #issues de Discord
+agent paste [file]  # Pega limpiamente y envía en automático el reporte en el canal #issues de Discord
 agent run <comando> # Ejecuta cualquier comando con aprobación previa obligatoria
 ```
 
