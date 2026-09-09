@@ -23,9 +23,14 @@ if not exist "%PROJECT_DIR%" (
 )
 
 :: ====================================================================
+:: 0. COMPROBAR O INSTALAR GIT
+:: ====================================================================
+call :CHECK_OR_INSTALL_GIT
+
+:: ====================================================================
 :: 1. COMPROBAR O INSTALAR PYTHON 3.11
 :: ====================================================================
-echo [1/3] Verificando interprete de Python...
+echo [2/4] Verificando interprete de Python...
 
 :: Probar si python en PATH funciona
 python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" 2>nul
@@ -80,7 +85,7 @@ if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
 :: ====================================================================
 :CREATE_VENV
 echo.
-echo [2/3] Verificando entorno virtual en "%VENV_DIR%"...
+echo [3/4] Verificando entorno virtual en "%VENV_DIR%"...
 
 if not exist "%VENV_DIR%\Scripts\python.exe" (
     echo Creando entorno virtual .venv...
@@ -102,7 +107,7 @@ set "VENV_PIP=%VENV_DIR%\Scripts\pip.exe"
 :: 3. INSTALAR DEPENDENCIAS DE CADA MODULO (SIN TOCAR EL REPOSITORIO)
 :: ====================================================================
 echo.
-echo [3/3] Instalando dependencias de los modulos de epub-generator...
+echo [4/4] Instalando dependencias de los modulos de epub-generator...
 echo Actualizando pip...
 "%VENV_PYTHON%" -m pip install --upgrade pip --quiet
 
@@ -141,3 +146,35 @@ echo Ningun archivo del repositorio epub-generator fue modificado.
 echo ====================================================================
 pause
 exit /b 0
+
+:: ====================================================================
+:: SUBRUTINA: COMPROBAR O INSTALAR GIT
+:: ====================================================================
+:CHECK_OR_INSTALL_GIT
+echo [1/4] Verificando instalacion de Git...
+git --version >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    for /f "tokens=*" %%g in ('git --version') do echo [OK] %%g detectado.
+    goto :EOF
+)
+
+if exist "%ProgramFiles%\Git\cmd\git.exe" (
+    set "PATH=%ProgramFiles%\Git\cmd;%PATH%"
+    echo [OK] Git encontrado en %ProgramFiles%\Git\cmd\
+    goto :EOF
+)
+
+if exist "%LOCALAPPDATA%\Programs\Git\cmd\git.exe" (
+    set "PATH=%LOCALAPPDATA%\Programs\Git\cmd;%PATH%"
+    echo [OK] Git encontrado en %LOCALAPPDATA%\Programs\Git\cmd\
+    goto :EOF
+)
+
+echo [!] Git no detectado. Procediendo a descargarlo e instalarlo...
+if exist "%SCRIPT_DIR%\install_git.bat" (
+    call "%SCRIPT_DIR%\install_git.bat" --nopause
+) else (
+    where.exe winget >nul 2>&1 && winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
+)
+if exist "%ProgramFiles%\Git\cmd\git.exe" set "PATH=%ProgramFiles%\Git\cmd;%PATH%"
+goto :EOF

@@ -1,6 +1,6 @@
-# Windows Scripts — epub-generator & Gestor de Alias CMD
+# Windows Scripts (wintools) — epub-generator, Git & Gestor de Alias CMD
 
-Esta carpeta contiene scripts independientes de Windows para automatizar la instalación de dependencias de `epub-generator` y configurar alias en CMD/PowerShell estilo Linux, **sin modificar ningún archivo del repositorio**.
+Esta carpeta contiene scripts independientes de Windows para automatizar la instalación de dependencias de `epub-generator`, instalar **Git para Windows** y configurar alias en CMD/PowerShell estilo Linux, **sin modificar ningún archivo del repositorio**.
 
 ---
 
@@ -8,8 +8,9 @@ Esta carpeta contiene scripts independientes de Windows para automatizar la inst
 
 | Script | Descripción |
 | :--- | :--- |
-| **`setup_all.bat`** | Menú interactivo con todas las opciones (o flags `--all`, `--deps`, `--aliases`). |
-| **`install_epub_deps.bat`** | Instala Python (si no está), crea `.venv` e instala las dependencias de cada submódulo de `epub-generator`. |
+| **`setup_all.bat`** | Menú interactivo con todas las opciones (Git, dependencias, alias, atajos de carpetas). |
+| **`install_git.bat`** | Verifica si Git está instalado; si no lo está, lo descarga e instala silenciosamente para Windows. |
+| **`install_epub_deps.bat`** | Verifica Git y Python (los instala si faltan), crea `.venv` e instala las dependencias de `epub-generator`. |
 | **`configurar_aliases_cmd.bat`** | Configura alias persistentes en CMD vía AutoRun del Registro y genera comandos globales en el PATH. |
 
 ---
@@ -26,7 +27,8 @@ setup_all.bat
 ```
 O directamente con flags:
 ```cmd
-setup_all.bat --all       # Instala dependencias y configura alias
+setup_all.bat --all       # Instala Git, dependencias y configura alias
+setup_all.bat --git       # Solo verifica/instala Git
 setup_all.bat --deps      # Solo dependencias
 setup_all.bat --aliases   # Solo alias
 ```
