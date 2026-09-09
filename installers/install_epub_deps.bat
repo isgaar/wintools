@@ -3,8 +3,9 @@ setlocal enabledelayedexpansion
 chcp 65001 >nul
 title EPUB-GENERATOR - Instalador de Dependencias (Sin tocar el repositorio)
 
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+set "INSTALLERS_DIR=%~dp0"
+if "%INSTALLERS_DIR:~-1%"=="\" set "INSTALLERS_DIR=%INSTALLERS_DIR:~0,-1%"
+set "SCRIPT_DIR=%INSTALLERS_DIR%\.."
 set "PROJECT_DIR=%SCRIPT_DIR%\..\epub-generator"
 set "VENV_DIR=%PROJECT_DIR%\.venv"
 set "PYTHON_CMD="
@@ -171,8 +172,8 @@ if exist "%LOCALAPPDATA%\Programs\Git\cmd\git.exe" (
 )
 
 echo [!] Git no detectado. Procediendo a descargarlo e instalarlo...
-if exist "%SCRIPT_DIR%\install_git.bat" (
-    call "%SCRIPT_DIR%\install_git.bat" --nopause
+if exist "%INSTALLERS_DIR%\install_git.bat" (
+    call "%INSTALLERS_DIR%\install_git.bat" --nopause
 ) else (
     where.exe winget >nul 2>&1 && winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
 )

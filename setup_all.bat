@@ -11,6 +11,7 @@ if /i "%~1"=="--deps" goto :OPT_DEPS
 if /i "%~1"=="--aliases" goto :OPT_ALIASES
 if /i "%~1"=="--alias" goto :OPT_ALIASES
 if /i "%~1"=="--git" goto :OPT_GIT
+if /i "%~1"=="--agent" goto :OPT_AGENT
 
 :MENU
 cls
@@ -19,42 +20,48 @@ echo             GESTOR DE SCRIPTS DE WINDOWS (WINDOWS-SCRIPTS)
 echo ====================================================================
 echo.
 echo  [1] Instalar dependencias de epub-generator (Crea .venv e instala librerias)
-echo  [2] Configurar alias estilo Linux en CMD (ag ., epub, add-alias...)
+echo  [2] Configurar alias estilo Linux en CMD (ag ., epub, agent, add-alias...)
 echo  [3] Instalar o verificar Git para Windows
 echo  [4] Realizar TODO (Git + Dependencias + Alias CMD) [Recomendado]
-echo  [5] Crear un nuevo alias para una carpeta personalizada
-echo  [6] Salir
+echo  [5] Iniciar Agent Bridge (Discord, auditoria paso a paso, guardia de commits)
+echo  [6] Crear un nuevo alias para una carpeta personalizada
+echo  [7] Salir
 echo.
 echo ====================================================================
-set /p "CHOICE=Selecciona una opcion [1-6]: "
+set /p "CHOICE=Selecciona una opcion [1-7]: "
 
 if "%CHOICE%"=="1" goto :OPT_DEPS
 if "%CHOICE%"=="2" goto :OPT_ALIASES
 if "%CHOICE%"=="3" goto :OPT_GIT
 if "%CHOICE%"=="4" goto :OPT_ALL
-if "%CHOICE%"=="5" goto :OPT_ADD_CUSTOM
-if "%CHOICE%"=="6" goto :END
+if "%CHOICE%"=="5" goto :OPT_AGENT
+if "%CHOICE%"=="6" goto :OPT_ADD_CUSTOM
+if "%CHOICE%"=="7" goto :END
 echo.
 echo [!] Opcion invalida.
 timeout /t 2 >nul
 goto :MENU
 
 :OPT_ALL
-call "%SCRIPT_DIR%\install_git.bat" --nopause
-call "%SCRIPT_DIR%\install_epub_deps.bat"
-call "%SCRIPT_DIR%\configurar_aliases_cmd.bat"
+call "%SCRIPT_DIR%\installers\install_git.bat" --nopause
+call "%SCRIPT_DIR%\installers\install_epub_deps.bat"
+call "%SCRIPT_DIR%\core\configurar_aliases_cmd.bat"
 goto :END
 
 :OPT_DEPS
-call "%SCRIPT_DIR%\install_epub_deps.bat"
+call "%SCRIPT_DIR%\installers\install_epub_deps.bat"
 goto :END
 
 :OPT_ALIASES
-call "%SCRIPT_DIR%\configurar_aliases_cmd.bat"
+call "%SCRIPT_DIR%\core\configurar_aliases_cmd.bat"
 goto :END
 
 :OPT_GIT
-call "%SCRIPT_DIR%\install_git.bat"
+call "%SCRIPT_DIR%\installers\install_git.bat"
+goto :MENU
+
+:OPT_AGENT
+call "%SCRIPT_DIR%\agent.bat"
 goto :MENU
 
 :OPT_ADD_CUSTOM

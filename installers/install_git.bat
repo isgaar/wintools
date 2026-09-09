@@ -44,41 +44,39 @@ if %ERRORLEVEL% EQU 0 (
     )
 )
 
-:: 4. Fallback: Descarga directa oficial del instalador de Git de GitHub Releases
-echo [2/2] Descargando instalador oficial de Git para Windows...
-set "GIT_INSTALLER=%TEMP%\Git-Installer-64bit.exe"
+:: 4. Descarga directa oficial del instalador de Git de 64 bits si winget falla
+echo [2/2] Descargando instalador oficial de Git para Windows (Standalone 64-bit)...
+set "GIT_INSTALLER=%TEMP%\Git-Installer.exe"
 
-powershell -NoProfile -Command "$url = (Invoke-RestMethod -Uri 'https://api.github.com/repos/git-for-windows/git/releases/latest').assets | Where-Object { $_.name -match '64-bit\.exe$' -and $_.name -notmatch 'MinGit|PortableGit' } | Select-Object -First 1 -ExpandProperty browser_download_url; if (-not $url) { $url = 'https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe' }; Write-Host \"Descargando desde: $url\"; Invoke-WebRequest -Uri $url -OutFile '%GIT_INSTALLER%'"
+powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://github.com/git-for-windows/git/releases/download/v2.44.0.windows.1/Git-2.44.0-64-bit.exe' -OutFile '%GIT_INSTALLER%'"
 
 if not exist "%GIT_INSTALLER%" (
-    echo [ERROR] No se pudo descargar el instalador de Git.
-    echo Por favor descargalo manualmente desde https://git-scm.com/
-    pause
+    echo [ERROR] No se pudo descargar el instalador de Git automaticamente.
+    echo Por favor descargalo manualmente desde: https://git-scm.com/download/win
+    if /i not "%~1"=="--nopause" pause
     exit /b 1
 )
 
-echo Instalando Git silenciosamente...
-start /wait "" "%GIT_INSTALLER%" /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS
+echo Instalando Git silenciosamente (por favor espera)...
+start /wait "" "%GIT_INSTALLER%" /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /COMPONENTS="icons,ext\reg\shellhere,assoc,assoc_sh"
 
+:: 5. Verificar instalacion final
 if exist "%ProgramFiles%\Git\cmd\git.exe" (
     set "PATH=%ProgramFiles%\Git\cmd;%PATH%"
-    echo [OK] Git para Windows instalado exitosamente!
+    echo [OK] Git se instalo correctamente en %ProgramFiles%\Git\cmd\
     goto :SUCCESS
-) else if exist "%LOCALAPPDATA%\Programs\Git\cmd\git.exe" (
-    set "PATH=%LOCALAPPDATA%\Programs\Git\cmd;%PATH%"
-    echo [OK] Git para Windows instalado exitosamente!
-    goto :SUCCESS
-) else (
-    echo [!] La instalacion finalizo. Si la consola no reconoce 'git',
-    echo reinicia la ventana de CMD para actualizar las variables de entorno.
 )
+
+echo [ERROR] No se pudo confirmar la instalacion de Git.
+if /i not "%~1"=="--nopause" pause
+exit /b 1
 
 :SUCCESS
 echo.
 echo ====================================================================
-echo  [OK] Git esta listo para usarse.
+echo  [OK] GIT LISTO PARA USAR EN WINDOWS!
 echo ====================================================================
-if "%~1"=="--nopause" goto :EOF
-if "%~1"=="/nopause" goto :EOF
-pause
+echo Puedes verificar ejecutando: git --version
+echo ====================================================================
+if /i not "%~1"=="--nopause" pause
 exit /b 0

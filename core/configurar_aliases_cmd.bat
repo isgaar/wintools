@@ -3,8 +3,9 @@ setlocal enabledelayedexpansion
 chcp 65001 >nul
 title CONFIGURAR ALIAS ESTILO LINUX EN CMD (WINDOWS)
 
-set "SCRIPT_DIR=%~dp0"
-if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+set "CORE_DIR=%~dp0"
+if "%CORE_DIR:~-1%"=="\" set "CORE_DIR=%CORE_DIR:~0,-1%"
+set "SCRIPT_DIR=%CORE_DIR%\.."
 set "PROJECT_DIR=%SCRIPT_DIR%\..\epub-generator"
 set "BIN_DIR=%LOCALAPPDATA%\Programs\Antigravity IDE\bin"
 set "AUTORUN_BAT=%USERPROFILE%\cmd_aliases.bat"
@@ -27,6 +28,7 @@ echo [1/4] Creando archivo de macros en %AUTORUN_BAT%...
     echo doskey antigravity=antigravity-ide $*
     echo doskey epub=cd /d "%PROJECT_DIR%" $T antigravity-ide .
     echo doskey epub-generator=cd /d "%PROJECT_DIR%" $T antigravity-ide .
+    echo doskey agent="%SCRIPT_DIR%\agent.bat" $*
     echo doskey alias=doskey $*
     echo doskey ls=dir /b /o:gn $*
     echo doskey ll=dir /o:gn $*
@@ -65,6 +67,12 @@ if not exist "%BIN_DIR%" mkdir "%BIN_DIR%" 2>nul
     echo call "%%~dp0antigravity-ide.cmd" .
 ) > "%BIN_DIR%\epub.cmd"
 
+:: Script 'agent.cmd' (puente interactivo de auditoria, control de pasos y Discord)
+(
+    echo @echo off
+    echo call "%SCRIPT_DIR%\agent.bat" %%*
+) > "%BIN_DIR%\agent.cmd"
+
 :: Script 'add-alias.cmd' (herramienta para agregar cualquier carpeta como alias en CMD)
 (
     echo @echo off
@@ -99,11 +107,11 @@ if not exist "%BIN_DIR%" mkdir "%BIN_DIR%" 2>nul
     echo ====================================================================
 ) > "%BIN_DIR%\add-alias.cmd"
 
-echo [OK] Comandos globales creados: 'ag', 'epub', 'add-alias'.
+echo [OK] Comandos globales creados: 'ag', 'epub', 'agent', 'add-alias'.
 
 :: 4. Configurar PowerShell Profile
 echo [4/4] Sincronizando configuracion con PowerShell Profile...
-powershell -NoProfile -Command "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force; $p = Split-Path -Parent $PROFILE; if (-not (Test-Path $p)) { New-Item -ItemType Directory -Path $p -Force | Out-Null }; $c = 'function ag { param(`$p = \".\") & \"antigravity-ide\" `$p }; function epub { Set-Location \"%PROJECT_DIR%\"; & \"antigravity-ide\" . }; Set-Alias -Name clear -Value Clear-Host -Option AllScope -ErrorAction SilentlyContinue'; if (Test-Path $PROFILE) { if ((Get-Content $PROFILE -Raw) -notmatch 'antigravity-ide') { Add-Content -Path $PROFILE -Value \"`n`$c\" } } else { Set-Content -Path $PROFILE -Value `$c -Encoding UTF8 }" >nul 2>nul
+powershell -NoProfile -Command "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned -Force; $p = Split-Path -Parent $PROFILE; if (-not (Test-Path $p)) { New-Item -ItemType Directory -Path $p -Force | Out-Null }; $c = 'function ag { param(`$p = \".\") & \"antigravity-ide\" `$p }; function epub { Set-Location \"%PROJECT_DIR%\"; & \"antigravity-ide\" . }; function agent { & \"%SCRIPT_DIR%\agent.bat\" `$args }; Set-Alias -Name clear -Value Clear-Host -Option AllScope -ErrorAction SilentlyContinue'; if (Test-Path $PROFILE) { if ((Get-Content $PROFILE -Raw) -notmatch 'antigravity-ide') { Add-Content -Path $PROFILE -Value \"`n`$c\" } } else { Set-Content -Path $PROFILE -Value `$c -Encoding UTF8 }" >nul 2>nul
 echo [OK] PowerShell profile configurado.
 
 echo.
@@ -117,7 +125,8 @@ echo  1. 'ag .'              : Abre la carpeta actual en Antigravity IDE.
 echo  2. 'ag'                : Abre la carpeta actual directamente.
 echo  3. 'antigravity-ide .' : Comando oficial completo.
 echo  4. 'epub'              : Salta a epub-generator y lo abre en el editor.
-echo  5. 'add-alias <nombre> [ruta]' : Crea un alias para cualquier carpeta!
+echo  5. 'agent'             : Puente de auditoria, control de pasos y Discord.
+echo  6. 'add-alias <nombre> [ruta]' : Crea un alias para cualquier carpeta!
 echo.
 echo  Comandos estilo Linux integrados en CMD:
 echo  - 'ls' / 'll'          : Listar archivos

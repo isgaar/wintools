@@ -4,14 +4,58 @@ Esta carpeta contiene scripts independientes de Windows para automatizar la inst
 
 ---
 
-## 📁 Archivos Disponibles
+## 📁 Estructura del Proyecto
 
-| Script | Descripción |
-| :--- | :--- |
-| **`setup_all.bat`** | Menú interactivo con todas las opciones (Git, dependencias, alias, atajos de carpetas). |
-| **`install_git.bat`** | Verifica si Git está instalado; si no lo está, lo descarga e instala silenciosamente para Windows. |
-| **`install_epub_deps.bat`** | Verifica Git y Python (los instala si faltan), crea `.venv` e instala las dependencias de `epub-generator`. |
-| **`configurar_aliases_cmd.bat`** | Configura alias persistentes en CMD vía AutoRun del Registro y genera comandos globales en el PATH. |
+```
+windows-scripts/
+├── setup_all.bat                      # Menú interactivo principal (todas las opciones)
+├── agent.bat                          # Acceso directo al Agent Bridge
+├── README.md                          # Documentación del repositorio
+├── .gitignore                         # Exclusiones de Git
+├── core/
+│   ├── agent_hub.py                   # Motor interactivo del agente y puente de seguridad
+│   └── configurar_aliases_cmd.bat     # Gestor de macros y comandos globales en el PATH
+├── installers/
+│   ├── install_epub_deps.bat          # Verificador de entorno, .venv y dependencias
+│   └── install_git.bat                # Verificador e instalador silencioso de Git
+└── docs/
+    └── instrucciones_auditoria.md     # Flujo oficial y reglas de Discord (#instrucciones-para-auditar)
+```
+
+| Archivo | Ubicación | Descripción |
+| :--- | :--- | :--- |
+| **`setup_all.bat`** | Raíz | Menú interactivo con todas las opciones (Git, dependencias, alias, agent). |
+| **`agent.bat`** | Raíz | Lanzador rápido del Agent Bridge para auditoría y control de pasos. |
+| **`agent_hub.py`** | `core/` | Motor Python: control paso a paso, puente Discord y guardia de commits. |
+| **`configurar_aliases_cmd.bat`** | `core/` | Registra macros persistentes en CMD y ejecutables globales (`agent`, `epub`, `ag`). |
+| **`install_epub_deps.bat`** | `installers/` | Crea `.venv` e instala dependencias de `epub-generator`. |
+| **`install_git.bat`** | `installers/` | Verifica y descarga Git para Windows. |
+| **`instrucciones_auditoria.md`** | `docs/` | Flujo oficial de trabajo y reglas aprendidas de Discord. |
+
+---
+
+## 🛡️ Agent Bridge (`agent.bat` / `agent`)
+
+El script `agent` actúa como **puente de auditoría y orquestación interactiva** entre la sesión de trabajo y `epub-generator`, asegurando control total humano:
+
+### Reglas Clave Integradas:
+1. **Aprobación Obligatoria Paso a Paso**: Todo comando, auditoría o modificación ejecutada sobre `epub-generator` requiere confirmación explícita del usuario (`[s/N]`).
+2. **Guardia Estricto de Commits**: **Ningún commit se realiza automáticamente**. Muestra el diff detallado y exige autorización explícita de Arodi (`ARODI`).
+3. **Integración con Discord (Servidor "epubs")**:
+   - **`#instrucciones-para-auditar`**: Consulta las pautas de trabajo y lotes activos asignados por Arodi.
+   - **`#issues`**: Canal oficial para reportar cualquier anomalía, fallo de pipeline o contradicción al triangular reportes. El asistente formatea el issue y lo copia automáticamente al portapapeles (`clip.exe`).
+
+### Comandos de `agent`:
+```cmd
+agent               # Abre el menú interactivo con todas las opciones
+agent discord       # Abre/enfoca Discord y muestra canales (#instrucciones-para-auditar, #issues)
+agent status        # Verifica el estado de Git en epub-generator
+agent diff          # Muestra el diff detallado de cambios pendientes
+agent commit        # Flujo de commit seguro (inspección de diff + aprobación de Arodi)
+agent audit         # Menú interactivo de herramientas de auditoría (Grammar / Sanity)
+agent issue         # Generador guiado de reporte de inconsistencias para #issues
+agent run <comando> # Ejecuta cualquier comando con aprobación previa obligatoria
+```
 
 ---
 
@@ -28,6 +72,7 @@ setup_all.bat
 O directamente con flags:
 ```cmd
 setup_all.bat --all       # Instala Git, dependencias y configura alias
+setup_all.bat --agent     # Inicia Agent Bridge directamente
 setup_all.bat --git       # Solo verifica/instala Git
 setup_all.bat --deps      # Solo dependencias
 setup_all.bat --aliases   # Solo alias
@@ -41,6 +86,7 @@ Una vez configurado, puedes abrir **cualquier ventana de CMD** y usar:
 
 | Comando | Acción |
 | :--- | :--- |
+| **`agent`** | Inicia el puente interactivo de auditoría y control de pasos. |
 | **`ag .`** o **`ag`** | Abre la carpeta actual en **Antigravity IDE**. |
 | **`antigravity-ide .`** | Comando completo original. |
 | **`epub`** | Salta a `epub-generator` y lo abre automáticamente en el editor. |
@@ -49,12 +95,6 @@ Una vez configurado, puedes abrir **cualquier ventana de CMD** y usar:
 | **`clear`** | Limpia la consola (`cls`). |
 | **`which <comando>`** | Muestra la ubicación de un ejecutable (`where.exe`). |
 | **`alias nom=cmd`** | Crea un alias temporal en la sesión actual. |
-
-### Ejemplo de cómo agregar un alias para cualquier otra carpeta:
-```cmd
-add-alias miweb "C:\Users\Inicio\Proyectos\miweb"
-```
-A partir de ese momento, escribes `miweb` en cualquier CMD y se abrirá esa carpeta en Antigravity IDE.
 
 ---
 
