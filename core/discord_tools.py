@@ -102,7 +102,9 @@ def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues"
     kernel32 = ctypes.windll.kernel32
 
     if text:
-        set_clipboard_text(text)
+        # Normalize text and line endings
+        cleaned = "\r\n".join([line.rstrip() for line in text.strip().splitlines()])
+        set_clipboard_text(cleaned)
 
     windows = find_discord_windows(channel_keyword=channel_keyword)
     if not windows:
@@ -136,16 +138,33 @@ def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues"
 
     time.sleep(0.4)
 
-    # Send Ctrl+V
     VK_CONTROL = 0x11
+    VK_A = 0x41
+    VK_BACK = 0x08
     VK_V = 0x56
 
+    # 1. Clear any existing text in the Discord message box (Ctrl+A -> Backspace)
     user32.keybd_event(VK_CONTROL, 0, 0, 0)
-    time.sleep(0.04)
+    time.sleep(0.03)
+    user32.keybd_event(VK_A, 0, 0, 0)
+    time.sleep(0.03)
+    user32.keybd_event(VK_A, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.03)
+    user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.05)
+
+    user32.keybd_event(VK_BACK, 0, 0, 0)
+    time.sleep(0.03)
+    user32.keybd_event(VK_BACK, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.08)
+
+    # 2. Paste single copy of formatted text (Ctrl+V)
+    user32.keybd_event(VK_CONTROL, 0, 0, 0)
+    time.sleep(0.03)
     user32.keybd_event(VK_V, 0, 0, 0)
-    time.sleep(0.04)
+    time.sleep(0.03)
     user32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
-    time.sleep(0.04)
+    time.sleep(0.03)
     user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
 
     return True
