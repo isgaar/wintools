@@ -192,6 +192,15 @@ def set_clipboard_files(paths: List[str]) -> bool:
     user32 = ctypes.windll.user32
     kernel32 = ctypes.windll.kernel32
 
+    kernel32.GlobalAlloc.restype = ctypes.c_void_p
+    kernel32.GlobalAlloc.argtypes = [wintypes.UINT, ctypes.c_size_t]
+    kernel32.GlobalLock.restype = ctypes.c_void_p
+    kernel32.GlobalLock.argtypes = [ctypes.c_void_p]
+    kernel32.GlobalUnlock.argtypes = [ctypes.c_void_p]
+    user32.SetClipboardData.restype = ctypes.c_void_p
+    user32.SetClipboardData.argtypes = [wintypes.UINT, ctypes.c_void_p]
+    user32.OpenClipboard.argtypes = [wintypes.HWND]
+
     abs_paths = [os.path.abspath(p) for p in paths if os.path.exists(p)]
     if not abs_paths:
         return False
