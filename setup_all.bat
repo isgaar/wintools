@@ -12,6 +12,8 @@ call :FIND_PYTHON
 if /i "%~1"=="--all" goto :OPT_ALL
 if /i "%~1"=="--deps" goto :OPT_DEPS
 if /i "%~1"=="--brave" goto :OPT_BRAVE
+if /i "%~1"=="--gemini-cli" goto :OPT_GEMINI_CLI
+if /i "%~1"=="--agy" goto :OPT_GEMINI_CLI
 if /i "%~1"=="--git" goto :OPT_GIT
 if /i "%~1"=="--aliases" goto :OPT_ALIASES
 if /i "%~1"=="--alias" goto :OPT_ALIASES
@@ -29,28 +31,30 @@ echo ====================================================================
 echo.
 echo  [1] Instalar dependencias de epub-generator (Python, .venv y librerias)
 echo  [2] Instalar o verificar Brave Browser (Requerido para traducciones)
-echo  [3] Instalar o verificar Git para Windows
-echo  [4] Configurar o importar todos los alias (orch, unlock, ag, epub...)
-echo  [5] Realizar TODO (Git + Brave + Deps + Alias) [Para equipo nuevo]
-echo  [6] Limpiar archivos de bloqueo huerfanos (.lock) del orquestador
-echo  [7] Crear un nuevo alias y guardarlo en el repositorio
-echo  [8] Exportar / Sincronizar alias locales hacia el repositorio
-echo  [9] Iniciar Agent Bridge (Discord, auditoria paso a paso, guardia)
-echo  [10] Salir
+echo  [3] Instalar o verificar Gemini CLI (Antigravity CLI / agy)
+echo  [4] Instalar o verificar Git para Windows
+echo  [5] Configurar o importar todos los alias (orch, agyd, ag, epub...)
+echo  [6] Realizar TODO (Git + Brave + Gemini CLI + Deps + Alias) [Equipo nuevo]
+echo  [7] Limpiar archivos de bloqueo huerfanos (.lock) del orquestador
+echo  [8] Crear un nuevo alias y guardarlo en el repositorio
+echo  [9] Exportar / Sincronizar alias locales hacia el repositorio
+echo  [10] Iniciar Agent Bridge (Discord, auditoria paso a paso, guardia)
+echo  [11] Salir
 echo.
 echo ====================================================================
-set /p "CHOICE=Selecciona una opcion [1-10]: "
+set /p "CHOICE=Selecciona una opcion [1-11]: "
 
 if "%CHOICE%"=="1" goto :OPT_DEPS
 if "%CHOICE%"=="2" goto :OPT_BRAVE
-if "%CHOICE%"=="3" goto :OPT_GIT
-if "%CHOICE%"=="4" goto :OPT_ALIASES
-if "%CHOICE%"=="5" goto :OPT_ALL
-if "%CHOICE%"=="6" goto :OPT_CLEAN_LOCKS
-if "%CHOICE%"=="7" goto :OPT_ADD_CUSTOM
-if "%CHOICE%"=="8" goto :OPT_EXPORT_ALIASES
-if "%CHOICE%"=="9" goto :OPT_AGENT
-if "%CHOICE%"=="10" goto :END
+if "%CHOICE%"=="3" goto :OPT_GEMINI_CLI
+if "%CHOICE%"=="4" goto :OPT_GIT
+if "%CHOICE%"=="5" goto :OPT_ALIASES
+if "%CHOICE%"=="6" goto :OPT_ALL
+if "%CHOICE%"=="7" goto :OPT_CLEAN_LOCKS
+if "%CHOICE%"=="8" goto :OPT_ADD_CUSTOM
+if "%CHOICE%"=="9" goto :OPT_EXPORT_ALIASES
+if "%CHOICE%"=="10" goto :OPT_AGENT
+if "%CHOICE%"=="11" goto :END
 echo.
 echo [!] Opcion invalida.
 timeout /t 2 >nul
@@ -59,6 +63,7 @@ goto :MENU
 :OPT_ALL
 call "%SCRIPT_DIR%\installers\install_git.bat" --nopause
 call "%SCRIPT_DIR%\installers\install_brave.bat" --nopause
+call "%SCRIPT_DIR%\installers\install_gemini_cli.bat" --nopause
 call "%SCRIPT_DIR%\installers\install_epub_deps.bat"
 call "%SCRIPT_DIR%\core\configure_cmd_aliases.bat" --nopause
 goto :END
@@ -70,6 +75,11 @@ goto :END
 
 :OPT_BRAVE
 call "%SCRIPT_DIR%\installers\install_brave.bat"
+if not "%~1"=="" goto :END
+goto :MENU
+
+:OPT_GEMINI_CLI
+call "%SCRIPT_DIR%\installers\install_gemini_cli.bat"
 if not "%~1"=="" goto :END
 goto :MENU
 

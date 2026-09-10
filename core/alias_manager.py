@@ -1,4 +1,4 @@
-﻿"""
+"""
 Location: C:/Users/Inicio/Proyectos/windows-scripts/core/alias_manager.py
 Function: Portable cross-machine alias manager and exporter for CMD, PowerShell and PATH.
 All Rights Reserved Arodi Emmanuel
@@ -19,7 +19,7 @@ AUTORUN_BAT = Path(os.path.expandvars(r"%USERPROFILE%\cmd_aliases.bat"))
 IDE_BIN = Path(os.path.expandvars(r"%LOCALAPPDATA%\Programs\Antigravity IDE\bin"))
 
 BUILTIN_COMMANDS = {
-    "ag", "ag.", "agy", "antigravity", "antigravity-ide",
+    "ag", "ag.", "agy", "agyd", "agy-skip", "agy-yolo", "antigravity", "antigravity-ide",
     "epub", "epub-generator", "orch", "orchestrator",
     "unlock", "agent", "alias", "ls", "ll", "clear", "which",
     "add-alias", "export-alias", "export-aliases", "sync-aliases"
@@ -198,6 +198,21 @@ def create_export_alias_cmd() -> None:
     (BIN_DIR / "export-aliases.cmd").write_text(content, encoding="utf-8")
 
 
+def create_agyd_cmd() -> None:
+    content = (
+        "@echo off\r\n"
+        "where.exe agy >nul 2>&1\r\n"
+        "if %ERRORLEVEL% NEQ 0 (\r\n"
+        "    if exist \"%LOCALAPPDATA%\\antigravity-cli\\bin\\agy.exe\" set \"PATH=%LOCALAPPDATA%\\antigravity-cli\\bin;%PATH%\"\r\n"
+        "    if exist \"%LOCALAPPDATA%\\agy\\bin\\agy.exe\" set \"PATH=%LOCALAPPDATA%\\agy\\bin;%PATH%\"\r\n"
+        ")\r\n"
+        "agy --dangerously-skip-permissions %*\r\n"
+    )
+    (BIN_DIR / "agyd.cmd").write_text(content, encoding="utf-8")
+    (BIN_DIR / "agy-skip.cmd").write_text(content, encoding="utf-8")
+    (BIN_DIR / "agy-yolo.cmd").write_text(content, encoding="utf-8")
+
+
 def create_custom_cmd(name: str, target_portable: str) -> None:
     content = (
         "@echo off\r\n"
@@ -259,6 +274,9 @@ def update_autorun_bat(custom_aliases: dict[str, dict]) -> None:
         "doskey ag=antigravity-ide $*",
         "doskey ag.=antigravity-ide .",
         "doskey agy=antigravity-ide $*",
+        "doskey agyd=agy --dangerously-skip-permissions $*",
+        "doskey agy-skip=agy --dangerously-skip-permissions $*",
+        "doskey agy-yolo=agy --dangerously-skip-permissions $*",
         "doskey antigravity=antigravity-ide $*",
         f'doskey epub=cd /d "{project_dir}" $T antigravity-ide .',
         f'doskey epub-generator=cd /d "{project_dir}" $T antigravity-ide .',
@@ -298,6 +316,9 @@ def update_powershell_profile(custom_aliases: dict[str, dict]) -> None:
         f'function unlock {{ Remove-Item -Path "{project_dir}\\amazon_publisher\\translator\\orchestrator\\state\\*.lock" -Force -ErrorAction SilentlyContinue; Write-Host "[OK] Locks removidos" }}',
         f'function epub {{ Set-Location "{project_dir}" }}',
         f'function agent {{ & "{ROOT_DIR}\\agent.bat" $args }}',
+        'function agyd { agy --dangerously-skip-permissions $args }',
+        'function agy-skip { agy --dangerously-skip-permissions $args }',
+        'function agy-yolo { agy --dangerously-skip-permissions $args }',
     ]
     for name, item in custom_aliases.items():
         resolved = resolve_portable_target(item.get("portable", ""))
@@ -331,6 +352,7 @@ def apply_all() -> None:
     create_epub_cmd()
     create_agent_cmd()
     create_ag_cmd()
+    create_agyd_cmd()
     create_add_alias_cmd()
     create_export_alias_cmd()
 
@@ -425,6 +447,8 @@ def list_aliases() -> None:
     print("  epub                -> Carpeta raiz de epub-generator")
     print("  agent               -> Interfaz del Agent Bridge / auditorias")
     print("  ag [ruta]           -> Abrir en Antigravity IDE")
+    print("  agyd / agy-skip     -> agy --dangerously-skip-permissions")
+    print("  agy-yolo            -> agy --dangerously-skip-permissions")
     print("  add-alias <nom> [p] -> Crear nuevo alias y guardarlo en el repo")
     print("  export-aliases      -> Exportar todos los alias al repositorio")
 

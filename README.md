@@ -87,8 +87,9 @@ setup_all.bat
 ```
 O directamente con flags:
 ```cmd
-setup_all.bat --all             # Instala Git, Brave, dependencias y configura alias
+setup_all.bat --all             # Instala Git, Brave, Gemini CLI, dependencias y alias
 setup_all.bat --brave           # Verifica o instala Brave Browser (requerido para Gemini)
+setup_all.bat --gemini-cli      # Verifica o instala Gemini CLI (Antigravity CLI / agy)
 setup_all.bat --deps            # Solo dependencias y entorno virtual
 setup_all.bat --clean-locks     # Elimina bloqueos (.lock) huerfanos del orquestador
 setup_all.bat --export-aliases  # Exporta todos los alias creados hacia el repositorio
@@ -106,6 +107,9 @@ Una vez configurado, puedes abrir **cualquier terminal (CMD o PowerShell)** y us
 
 | Comando | Acción |
 | :--- | :--- |
+| **`agyd`** | Ejecuta `agy --dangerously-skip-permissions` (auto-aprueba herramientas). |
+| **`agy-yolo`** | Alias alternativo para `agy --dangerously-skip-permissions`. |
+| **`agy-skip`** | Alias alternativo para `agy --dangerously-skip-permissions`. |
 | **`orch <config>`** | Ejecuta directamente el orquestador de traducción de `epub-generator`. |
 | **`unlock`** | Elimina bloqueos `.lock` huérfanos si un proceso previo fue interrumpido. |
 | **`epub`** | Salta al directorio de `epub-generator`. |
