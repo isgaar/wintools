@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal enabledelayedexpansion
 chcp 65001 >nul
 title WINDOWS SCRIPTS - Instalador y Gestor de Herramientas
@@ -7,10 +7,7 @@ set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 set "PROJECT_DIR=%SCRIPT_DIR%\..\epub-generator"
 
-set "PY_CMD=python"
-if exist "%PROJECT_DIR%\.venv\Scripts\python.exe" (
-    set "PY_CMD=%PROJECT_DIR%\.venv\Scripts\python.exe"
-)
+call :FIND_PYTHON
 
 if /i "%~1"=="--all" goto :OPT_ALL
 if /i "%~1"=="--deps" goto :OPT_DEPS
@@ -68,6 +65,7 @@ goto :END
 
 :OPT_DEPS
 call "%SCRIPT_DIR%\installers\install_epub_deps.bat"
+call :FIND_PYTHON
 goto :END
 
 :OPT_BRAVE
@@ -81,11 +79,24 @@ if not "%~1"=="" goto :END
 goto :MENU
 
 :OPT_ALIASES
+if not "%~1"=="" (
+    call "%SCRIPT_DIR%\core\configure_cmd_aliases.bat" --nopause
+    call :FIND_PYTHON
+    goto :END
+)
 call "%SCRIPT_DIR%\core\configure_cmd_aliases.bat"
-if not "%~1"=="" goto :END
+call :FIND_PYTHON
 goto :MENU
 
 :OPT_EXPORT_ALIASES
+call :FIND_PYTHON
+if "%PY_CMD%"=="" (
+    echo [!] Se requiere Python 3.10+ para exportar alias.
+    echo     Ejecuta la opcion [1] para instalar Python y dependencias.
+    if not "%~1"=="" goto :END
+    pause
+    goto :MENU
+)
 echo.
 "%PY_CMD%" "%SCRIPT_DIR%\core\alias_manager.py" export
 if not "%~1"=="" goto :END
@@ -93,6 +104,14 @@ pause
 goto :MENU
 
 :OPT_LIST_ALIASES
+call :FIND_PYTHON
+if "%PY_CMD%"=="" (
+    echo [!] Se requiere Python 3.10+ para listar alias.
+    echo     Ejecuta la opcion [1] para instalar Python y dependencias.
+    if not "%~1"=="" goto :END
+    pause
+    goto :MENU
+)
 echo.
 "%PY_CMD%" "%SCRIPT_DIR%\core\alias_manager.py" list
 if not "%~1"=="" goto :END
@@ -119,6 +138,13 @@ if not "%~1"=="" goto :END
 goto :MENU
 
 :OPT_ADD_CUSTOM
+call :FIND_PYTHON
+if "%PY_CMD%"=="" (
+    echo [!] Se requiere Python 3.10+ para anadir alias.
+    echo     Ejecuta la opcion [1] para instalar Python y dependencias.
+    pause
+    goto :MENU
+)
 cls
 echo ====================================================================
 echo      CREAR ALIAS PERSONALIZADO Y GUARDAR EN EL REPOSITORIO
@@ -141,3 +167,42 @@ goto :MENU
 
 :END
 exit /b 0
+
+:: ====================================================================
+:: SUBRUTINA: BUSCADOR DE PYTHON ROBUSTO
+:: ====================================================================
+:FIND_PYTHON
+set "PY_CMD="
+
+if exist "%PROJECT_DIR%\.venv\Scripts\python.exe" (
+    set "PY_CMD=%PROJECT_DIR%\.venv\Scripts\python.exe"
+    exit /b 0
+)
+if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
+    set "PY_CMD=%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
+    exit /b 0
+)
+if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
+    set "PY_CMD=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+    exit /b 0
+)
+if exist "%LOCALAPPDATA%\Programs\Python\Python310\python.exe" (
+    set "PY_CMD=%LOCALAPPDATA%\Programs\Python\Python310\python.exe"
+    exit /b 0
+)
+if exist "%ProgramFiles%\Python311\python.exe" (
+    set "PY_CMD=%ProgramFiles%\Python311\python.exe"
+    exit /b 0
+)
+py -3 -c "import sys; sys.exit(0)" >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    set "PY_CMD=py -3"
+    exit /b 0
+)
+python -c "import sys; sys.exit(0)" >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    set "PY_CMD=python"
+    exit /b 0
+)
+set "PY_CMD="
+exit /b 1

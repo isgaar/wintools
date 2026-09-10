@@ -1,4 +1,4 @@
-﻿@echo off
+@echo off
 setlocal enabledelayedexpansion
 chcp 65001 >nul
 title INSTALADOR DE BRAVE BROWSER (TRADUCCIONES GEMINI CDP)
