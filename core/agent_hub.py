@@ -22,6 +22,15 @@ except ImportError:
         find_discord_windows = None
         upload_files_to_discord = None
 
+try:
+    from .lote_checker import inspect_lote, print_lote_report
+except ImportError:
+    try:
+        from lote_checker import inspect_lote, print_lote_report
+    except ImportError:
+        inspect_lote = None
+        print_lote_report = None
+
 if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -76,7 +85,11 @@ def open_discord(show_info: bool = True) -> None:
         cprint("+--------------------------------------------------------------------+", COLOR_MAGENTA)
         cprint("| [SERVIDOR] 'epubs'                                                 |", COLOR_CYAN)
         cprint("|                                                                    |", COLOR_CYAN)
-        cprint("| [CANAL] #instrucciones-para-auditar                                |", COLOR_GREEN)
+        cprint("| [CANAL] #en-turno                                                  |", COLOR_CYAN)
+        cprint("|    * Backlog activo y orden de lotes en cola de producción.        |", COLOR_RESET)
+        cprint("|    * Arodi define aquí los lotes activos (dazai-lote-1 a 5).       |", COLOR_RESET)
+        cprint("|                                                                    |", COLOR_CYAN)
+        cprint("| [CANAL] #instrucciones-para-aduitar                                |", COLOR_GREEN)
         cprint("|    * Directrices de trabajo, orden de prioridades y lotes.         |", COLOR_RESET)
         cprint("|    * En este canal se revisa lo que pone Arodi en cada turno.      |", COLOR_RESET)
         cprint("|                                                                    |", COLOR_CYAN)
@@ -504,10 +517,51 @@ def show_context_flow() -> None:
     else:
         cprint("[!] No se encontró archivo de contexto en context/.", COLOR_RED)
 
+def lote_runner_flow() -> None:
+    print_header("INSPECCIÓN Y PROCESAMIENTO DE LOTE (#en-turno)", "Modo Seguro — Sin tocar git en el repositorio de Arodi")
+    if not inspect_lote or not print_lote_report:
+        cprint("[!] Módulo lote_checker no disponible.", COLOR_RED)
+        return
+
+    try:
+        lote_str = input(" Ingresa el número de lote a inspeccionar (1-5) [1]: ").strip() or "1"
+        lote_num = int(lote_str)
+    except (ValueError, KeyboardInterrupt, EOFError):
+        return
+
+    data = inspect_lote(lote_num)
+    print_lote_report(data)
+
+    if not data or not data.get("items"):
+        return
+
+    missing_merge = [it for it in data["items"] if not it["merged"] and it["trans_ok"]]
+    if missing_merge:
+        print()
+        cprint(f" Hay {len(missing_merge)} obras listas para concatenar en lote-{lote_num}.", COLOR_YELLOW)
+        try:
+            do_merge = input(f" ¿Deseas concatenar las {len(missing_merge)} obras pendientes de lote-{lote_num}? [s/N]: ").strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            return
+
+        if do_merge in ["s", "si", "y", "yes"]:
+            translated_base = data["translated_base"]
+            translated_base.mkdir(parents=True, exist_ok=True)
+            for it in missing_merge:
+                slug = it["slug"]
+                input_dir = PROJECT_DIR / "splitter" / "japon" / "dazai-osamu" / slug / "es"
+                output_path = translated_base / f"{slug}.txt"
+                cmd = [PYTHON_EXE, "-m", "tools.part_merger", str(input_dir), str(output_path)]
+                res = run_project_command(cmd, f"Concatenar {slug}", f"Unir {it['es_parts']} partes en {output_path.name}")
+                if res == 0:
+                    cprint(f" [OK] {slug}.txt concatenado correctamente.", COLOR_GREEN)
+                else:
+                    cprint(f" [!] Falló la concatenación de {slug}.", COLOR_RED)
+
 def interactive_menu() -> None:
     while True:
         print_header("AGENT BRIDGE — epub-generator & Windows Scripts", "Puente interactivo de auditoría, control de pasos y Discord")
-        cprint("Servidor Discord: 'epubs' | Canales: #instrucciones-para-auditar & #issues", COLOR_MAGENTA)
+        cprint("Servidor Discord: 'epubs' | Canales: #en-turno, #instrucciones-para-auditar, #issues, #bitácora", COLOR_MAGENTA)
         print()
         print(" [1] 🎮 Abrir / Enfocar Discord (Servidor 'epubs')")
         print(" [2] 📜 Ver / Actualizar instrucciones de auditoría (#instrucciones-para-auditar)")
@@ -515,15 +569,16 @@ def interactive_menu() -> None:
         print(" [4] 🔍 Ver estado de Git en epub-generator")
         print(" [5] 📄 Ver Diff detallado de cambios")
         print(" [6] 🛡️  Realizar Commit seguro (Aprobación estricta de Arodi)")
-        print(" [7] 🛠️  Ejecutar Auditoría / Grammar / Suite (Paso a paso)")
-        print(" [8] 🚨 Redactar y enviar reporte para canal #issues")
-        print(" [9] 📋 Registrar entrega en canal #bitácora (Aceptación cumplida)")
-        print(" [10] ⚡ Ejecutar comando manual en epub-generator (con aprobación)")
+        print(" [7] 📋 Inspeccionar y procesar Lote (#en-turno: Lote 1-5)")
+        print(" [8] 🛠️  Ejecutar Auditoría / Grammar / Suite (Paso a paso)")
+        print(" [9] 🚨 Redactar y enviar reporte para canal #issues")
+        print(" [10] 📋 Registrar entrega en canal #bitácora (Aceptación cumplida)")
+        print(" [11] ⚡ Ejecutar comando manual en epub-generator (con aprobación)")
         print(" [0] 🚪 Salir")
         print()
 
         try:
-            choice = input(" Selecciona una opción [0-10]: ").strip()
+            choice = input(" Selecciona una opción [0-11]: ").strip()
         except (KeyboardInterrupt, EOFError):
             print()
             break
@@ -541,12 +596,14 @@ def interactive_menu() -> None:
         elif choice == "6":
             safe_commit_flow()
         elif choice == "7":
-            audit_runner_flow()
+            lote_runner_flow()
         elif choice == "8":
-            create_issue_flow()
+            audit_runner_flow()
         elif choice == "9":
-            create_bitacora_flow()
+            create_issue_flow()
         elif choice == "10":
+            create_bitacora_flow()
+        elif choice == "11":
             cmd = input("Comando a ejecutar en epub-generator: ").strip()
             if cmd:
                 run_project_command(cmd, "Comando manual", "Ejecución manual solicitada por el usuario")
@@ -584,6 +641,17 @@ def main() -> None:
         create_issue_flow()
     elif subcmd in ["bitacora", "--bitacora", "log"]:
         create_bitacora_flow()
+    elif subcmd in ["lote", "lote1", "lotes", "check-lote"]:
+        num = 1
+        if len(args) > 1 and args[1].isdigit():
+            num = int(args[1])
+        elif subcmd == "lote1":
+            num = 1
+        if inspect_lote and print_lote_report:
+            data = inspect_lote(num)
+            print_lote_report(data)
+        else:
+            cprint("[!] Módulo lote_checker no disponible.", COLOR_RED)
     elif subcmd in ["audit", "--audit"]:
         audit_runner_flow()
     elif subcmd in ["run", "--run"]:

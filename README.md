@@ -87,32 +87,59 @@ setup_all.bat
 ```
 O directamente con flags:
 ```cmd
-setup_all.bat --all       # Instala Git, dependencias y configura alias
-setup_all.bat --agent     # Inicia Agent Bridge directamente
-setup_all.bat --git       # Solo verifica/instala Git
-setup_all.bat --deps      # Solo dependencias
-setup_all.bat --aliases   # Solo alias
+setup_all.bat --all             # Instala Git, Brave, dependencias y configura alias
+setup_all.bat --brave           # Verifica o instala Brave Browser (requerido para Gemini)
+setup_all.bat --deps            # Solo dependencias y entorno virtual
+setup_all.bat --clean-locks     # Elimina bloqueos (.lock) huerfanos del orquestador
+setup_all.bat --export-aliases  # Exporta todos los alias creados hacia el repositorio
+setup_all.bat --list-aliases    # Muestra los alias configurados y sus rutas portables
+setup_all.bat --git             # Solo verifica/instala Git
+setup_all.bat --aliases         # Solo alias (aplica y sincroniza todos)
+setup_all.bat --agent           # Inicia Agent Bridge directamente
 ```
 
 ---
 
-## 🚀 Alias disponibles en CMD (Estilo Linux)
+## 🚀 Alias disponibles en CMD y PowerShell
 
-Una vez configurado, puedes abrir **cualquier ventana de CMD** y usar:
+Una vez configurado, puedes abrir **cualquier terminal (CMD o PowerShell)** y usar:
 
 | Comando | Acción |
 | :--- | :--- |
+| **`orch <config>`** | Ejecuta directamente el orquestador de traducción de `epub-generator`. |
+| **`unlock`** | Elimina bloqueos `.lock` huérfanos si un proceso previo fue interrumpido. |
+| **`epub`** | Salta al directorio de `epub-generator`. |
 | **`agent`** | Inicia el puente interactivo de auditoría y control de pasos. |
 | **`ag .`** o **`ag`** | Abre la carpeta actual en **Antigravity IDE**. |
-| **`antigravity-ide .`** | Comando completo original. |
-| **`epub`** | Salta a `epub-generator` y lo abre automáticamente en el editor. |
-| **`add-alias <nombre> [ruta]`** | Registra cualquier carpeta como alias para abrirla en Antigravity IDE. |
+| **`add-alias <nombre> [ruta]`** | Registra cualquier carpeta como comando de acceso rápido. |
 | **`ls`** o **`ll`** | Lista los archivos del directorio actual (estilo Linux). |
 | **`clear`** | Limpia la consola (`cls`). |
 | **`which <comando>`** | Muestra la ubicación de un ejecutable (`where.exe`). |
-| **`alias nom=cmd`** | Crea un alias temporal en la sesión actual. |
+
+---
+
+## ⚡ Configuración en un Segundo Equipo (Ahorro de Energía)
+
+Para trasladar tareas pesadas o maratones de traducción a otro equipo:
+
+1. **Clonar wintools / windows-scripts**:
+   ```cmd
+   git clone https://github.com/isgaar/wintools.git windows-scripts
+   cd windows-scripts
+   ```
+2. **Ejecutar instalación completa**:
+   ```cmd
+   setup_all.bat --all
+   ```
+   *(Instala Git, Brave Browser, clona `epub-generator` automáticamente si no existe, crea `.venv` con todas las dependencias e inyecta los comandos globales).*
+3. **Paso único en Brave Browser**:
+   Abre Brave, entra a [Gemini](https://gemini.google.com) e inicia sesión con tu cuenta de Google (para que tus Gems estén disponibles).
+4. **Lanzar maratón**:
+   ```cmd
+   orch amazon_publisher/translator/orchestrator/configs/dazai-osamu/dazai-osamu-pt.json
+   ```
 
 ---
 
 ## 🔒 Integridad del Repositorio
-Estos scripts operan externamente desde `windows-scripts/`. Ningún archivo de código, documentación o configuración del repositorio `epub-generator` es modificado.
+Estos scripts operan externamente desde `windows-scripts/` para mantener limpio el entorno de producción.

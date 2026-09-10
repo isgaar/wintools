@@ -93,10 +93,73 @@ def find_discord_windows(channel_keyword: str = "issues") -> List[Tuple[int, str
 
     return results
 
+def switch_discord_channel(channel_keyword: str) -> None:
+    """Navigates to a Discord channel using Discord's Quick Switcher (Ctrl+K)."""
+    if not channel_keyword or sys.platform != "win32":
+        return
+    import ctypes
+    user32 = ctypes.windll.user32
+
+    VK_CONTROL = 0x11
+    VK_K = 0x4B
+    VK_V = 0x56
+    VK_RETURN = 0x0D
+    VK_ESCAPE = 0x1B
+    KEYEVENTF_KEYUP = 0x0002
+
+    CANONICAL_CHANNELS = {
+        "bitacora": "bitácora",
+        "bitácora": "bitácora",
+        "turno": "en-turno",
+        "en-turno": "en-turno",
+        "enturno": "en-turno",
+        "issues": "issues",
+        "issue": "issues",
+        "instrucciones": "instrucciones-para-aduitar",
+        "instrucciones-para-auditar": "instrucciones-para-aduitar",
+        "instrucciones-para-aduitar": "instrucciones-para-aduitar",
+        "general": "general",
+    }
+    kw_clean = channel_keyword.lower().strip()
+    target_kw = CANONICAL_CHANNELS.get(kw_clean, channel_keyword)
+
+    # 1. Escape any open popup or active search
+    user32.keybd_event(VK_ESCAPE, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_ESCAPE, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.12)
+
+    # 2. Open Quick Switcher (Ctrl + K)
+    user32.keybd_event(VK_CONTROL, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_K, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_K, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.35)
+
+    # 3. Paste canonical channel keyword (e.g. 'bitácora')
+    set_clipboard_text(target_kw)
+    user32.keybd_event(VK_CONTROL, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_V, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.4)
+
+    # 4. Press Enter to switch channel
+    user32.keybd_event(VK_RETURN, 0, 0, 0)
+    time.sleep(0.04)
+    user32.keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0)
+    time.sleep(0.6)
+
 def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues", send_enter: bool = True) -> bool:
     """
-    Brings Discord to foreground, clears existing message box, pastes Ctrl+V,
-    and optionally presses Enter to send the message automatically.
+    Brings Discord to foreground, switches to requested channel, clears existing message box,
+    pastes Ctrl+V, and optionally presses Enter to send the message automatically.
     """
     if sys.platform != "win32":
         return False
@@ -105,11 +168,6 @@ def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues"
 
     user32 = ctypes.windll.user32
     kernel32 = ctypes.windll.kernel32
-
-    if text:
-        # Normalize text and line endings
-        cleaned = "\r\n".join([line.rstrip() for line in text.strip().splitlines()])
-        set_clipboard_text(cleaned)
 
     windows = find_discord_windows(channel_keyword=channel_keyword)
     if not windows:
@@ -142,6 +200,15 @@ def paste_to_discord(text: Optional[str] = None, channel_keyword: str = "issues"
     user32.SetForegroundWindow(target_hwnd)
 
     time.sleep(0.4)
+
+    # Switch to the requested Discord channel via Quick Switcher (Ctrl+K)
+    if channel_keyword:
+        switch_discord_channel(channel_keyword)
+
+    if text:
+        # Normalize text and line endings
+        cleaned = "\r\n".join([line.rstrip() for line in text.strip().splitlines()])
+        set_clipboard_text(cleaned)
 
     VK_CONTROL = 0x11
     VK_A = 0x41
@@ -286,6 +353,14 @@ def upload_files_to_discord(file_paths: List[str], channel_keyword: str = "bitac
     user32.SetForegroundWindow(target_hwnd)
 
     time.sleep(0.4)
+
+    # Switch channel first using Quick Switcher (Ctrl+K)
+    if channel_keyword:
+        switch_discord_channel(channel_keyword)
+
+    # Re-apply files to clipboard after channel navigation
+    if not set_clipboard_files(file_paths):
+        return False
 
     # Paste file into Discord
     VK_CONTROL = 0x11

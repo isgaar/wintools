@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 setlocal enabledelayedexpansion
 chcp 65001 >nul
 title EPUB-GENERATOR - Instalador de Dependencias (Sin tocar el repositorio)
@@ -17,20 +17,41 @@ echo.
 echo Repositorio objetivo: %PROJECT_DIR%
 echo.
 
-if not exist "%PROJECT_DIR%" (
-    echo [ERROR] No se encontro la carpeta epub-generator en "%PROJECT_DIR%".
-    pause
-    exit /b 1
-)
-
 :: ====================================================================
-:: 0. COMPROBAR O INSTALAR GIT
+:: 0. COMPROBAR O INSTALAR GIT PRIMERO
 :: ====================================================================
 call :CHECK_OR_INSTALL_GIT
 
 :: ====================================================================
-:: 1. COMPROBAR O INSTALAR PYTHON 3.11
+:: 1. COMPROBAR O CLONAR EL REPOSITORIO EPUB-GENERATOR SI NO EXISTE
 :: ====================================================================
+if not exist "%PROJECT_DIR%" (
+    echo [!] No se encontro la carpeta epub-generator en:
+    echo     "%PROJECT_DIR%"
+    echo.
+    echo ¿Deseas clonar el repositorio epub-generator ahora desde GitHub?
+    set /p "CLONE_CHOICE=Clonar repositorio? [S/n]: "
+    if "!CLONE_CHOICE!"=="" set "CLONE_CHOICE=S"
+    if /i "!CLONE_CHOICE!"=="S" (
+        echo Clonando https://github.com/arodoo/epub-generator.git ...
+        git clone https://github.com/arodoo/epub-generator.git "%PROJECT_DIR%"
+        if !ERRORLEVEL! NEQ 0 (
+            echo [ERROR] Fallo al clonar el repositorio. Verifica tu conexion o credenciales.
+            pause
+            exit /b 1
+        )
+        echo [OK] Repositorio clonado exitosamente.
+    ) else (
+        echo [ERROR] Se requiere el repositorio epub-generator para continuar.
+        pause
+        exit /b 1
+    )
+)
+
+:: ====================================================================
+:: 2. COMPROBAR O INSTALAR PYTHON 3.11
+:: ====================================================================
+echo.
 echo [2/4] Verificando interprete de Python...
 
 :: Probar si python en PATH funciona
@@ -82,7 +103,7 @@ if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" (
 )
 
 :: ====================================================================
-:: 2. CREAR / VERIFICAR ENTORNO VIRTUAL (.venv)
+:: 3. CREAR / VERIFICAR ENTORNO VIRTUAL (.venv)
 :: ====================================================================
 :CREATE_VENV
 echo.
@@ -91,7 +112,7 @@ echo [3/4] Verificando entorno virtual en "%VENV_DIR%"...
 if not exist "%VENV_DIR%\Scripts\python.exe" (
     echo Creando entorno virtual .venv...
     "%PYTHON_CMD%" -m venv "%VENV_DIR%"
-    if %ERRORLEVEL% NEQ 0 (
+    if !ERRORLEVEL! NEQ 0 (
         echo [ERROR] Fallo al crear el entorno virtual.
         pause
         exit /b 1
@@ -105,12 +126,22 @@ set "VENV_PYTHON=%VENV_DIR%\Scripts\python.exe"
 set "VENV_PIP=%VENV_DIR%\Scripts\pip.exe"
 
 :: ====================================================================
-:: 3. INSTALAR DEPENDENCIAS DE CADA MODULO (SIN TOCAR EL REPOSITORIO)
+:: 4. INSTALAR DEPENDENCIAS DE TODOS LOS MODULOS
 :: ====================================================================
 echo.
 echo [4/4] Instalando dependencias de los modulos de epub-generator...
 echo Actualizando pip...
 "%VENV_PYTHON%" -m pip install --upgrade pip --quiet
+
+if exist "%PROJECT_DIR%\amazon_publisher\requirements.txt" (
+    echo.
+    echo -- Instalando: amazon_publisher/requirements.txt (Orchestrator + Playwright + CDP)
+    "%VENV_PIP%" install -r "%PROJECT_DIR%\amazon_publisher\requirements.txt"
+) else (
+    echo.
+    echo -- Instalando dependencias base de traductor y orquestador...
+    "%VENV_PIP%" install playwright psutil pydantic pyyaml requests websockets langdetect
+)
 
 if exist "%PROJECT_DIR%\modules\epub_generator\requirements.txt" (
     echo.
@@ -143,7 +174,17 @@ echo ====================================================================
 echo Todas las librerias se instalaron en:
 echo %VENV_DIR%
 echo.
-echo Ningun archivo del repositorio epub-generator fue modificado.
+echo Verificando Brave Browser (necesario para traducir con gem_browser)...
+if exist "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe" (
+    echo [OK] Brave Browser listo en C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe
+) else (
+    if exist "%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe" (
+        echo [OK] Brave Browser listo en %LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe
+    ) else (
+        echo [AVISO] Brave Browser no fue detectado en las rutas estandar.
+        echo         Instalalo desde el menu con la opcion de Brave o: winget install Brave.Brave
+    )
+)
 echo ====================================================================
 pause
 exit /b 0
