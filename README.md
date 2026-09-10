@@ -14,6 +14,7 @@ windows-scripts/
 ├── .gitignore                         # Exclusiones de Git
 ├── core/
 │   ├── agent_hub.py                   # Orquestador del puente interactivo, control de pasos y seguridad
+│   ├── branch_manager.py              # Gestor de ramas e inventario de libros trabajados en epub-generator
 │   ├── configure_cmd_aliases.bat      # Inyector de macros y ejecutables globales en Antigravity IDE/bin
 │   ├── discord_tools.py               # Automatización Win32: enfoque, limpieza de buffer, pegado y envío en Discord
 │   └── fix_antigravity_ide.py         # Corrección de doble ventana y restauración de panel de agente en Antigravity IDE
@@ -21,21 +22,24 @@ windows-scripts/
 │   ├── install_epub_deps.bat          # Creador de .venv e instalador de dependencias de Python
 │   └── install_git.bat                # Verificador e instalador silencioso de Git
 ├── docs/
-│   └── audit_instructions.md          # Flujo oficial y reglas de Discord (#instrucciones-para-auditar)
+│   ├── audit_instructions.md          # Flujo oficial y reglas de Discord (#instrucciones-para-auditar)
+│   └── branches_and_books_status.md   # Estado de ramas y libros trabajados (Dazai ES, PT, Main, WIP 24/7)
 └── context/
     └── latest_shift_diagnostic.md     # Snapshot del estado de obras en turno para ahorro de tokens
 ```
 
 | Archivo | Ubicación | Descripción |
 | :--- | :--- | :--- |
-| **`setup_all.bat`** | Raíz | Menú interactivo con todas las opciones (Git, dependencias, alias, agent). |
+| **`setup_all.bat`** | Raíz | Menú interactivo con todas las opciones (Git, dependencias, alias, agent, ramas). |
 | **`agent.bat`** | Raíz | Lanzador rápido del Agent Bridge para auditoría y control de pasos. |
 | **`agent_hub.py`** | `core/` | Motor Python: control paso a paso, puente Discord y guardia de commits. |
+| **`branch_manager.py`** | `core/` | Gestor y sincronizador de ramas de `epub-generator` sin tocar el repositorio. |
 | **`discord_tools.py`** | `core/` | Automatización de escritorio Win32: conexión a `winsta0\default`, pegado limpio y auto-envío en Discord. |
 | **`fix_antigravity_ide.py`** | `core/` | Previene la doble ventana y restaura la visibilidad del panel del agente en Antigravity IDE. |
 | **`configure_cmd_aliases.bat`** | `core/` | Registra macros persistentes en CMD y ejecutables globales (`agent`, `epub`, `ag`). |
-| **`install_epub_deps.bat`** | `installers/` | Crea `.venv` e instala dependencias de `epub-generator`. |
+| **`install_epub_deps.bat`** | `installers/` | Crea `.venv`, clona `epub-generator` y ofrece rama de inicio (`wip`, `pt`). |
 | **`install_git.bat`** | `installers/` | Verifica y descarga Git para Windows. |
+| **`branches_and_books_status.md`** | `docs/` | Inventario detallado de libros y ramas (`wip/workstation-migration-handoff`, etc.). |
 | **`audit_instructions.md`** | `docs/` | Flujo oficial de trabajo y reglas aprendidas de Discord. |
 | **`latest_shift_diagnostic.md`** | `context/` | Snapshot del diagnóstico y tareas en turno para evitar relecturas y ahorrar tokens. |
 

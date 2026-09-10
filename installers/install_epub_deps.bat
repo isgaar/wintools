@@ -41,6 +41,24 @@ if not exist "%PROJECT_DIR%" (
             exit /b 1
         )
         echo [OK] Repositorio clonado exitosamente.
+        echo.
+        echo Sincronizando ramas remotas...
+        pushd "%PROJECT_DIR%"
+        git fetch origin >nul 2>&1
+        echo.
+        echo ====================================================================
+        echo  SELECCION DE RAMA DE TRABAJO INICIAL PARA EPUB-GENERATOR
+        echo ====================================================================
+        echo  [1] wip/workstation-migration-handoff (Recomendada: Lote 1 ES + PT + Fixes 24/7)
+        echo  [2] translations/dazai-osamu-pt (Lote Portugues limpio de Dazai Osamu)
+        echo  [3] main (Troncal upstream Arodi)
+        echo.
+        set /p "INIT_BRANCH=Selecciona rama inicial [1-3, por defecto 1]: "
+        if "!INIT_BRANCH!"=="" set "INIT_BRANCH=1"
+        if "!INIT_BRANCH!"=="1" git checkout wip/workstation-migration-handoff
+        if "!INIT_BRANCH!"=="2" git checkout translations/dazai-osamu-pt
+        if "!INIT_BRANCH!"=="3" git checkout main
+        popd
     ) else (
         echo [ERROR] Se requiere el repositorio epub-generator para continuar.
         pause

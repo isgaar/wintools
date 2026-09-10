@@ -24,7 +24,11 @@ if /i "%~1"=="--unlock" goto :OPT_CLEAN_LOCKS
 if /i "%~1"=="--agent" goto :OPT_AGENT
 if /i "%~1"=="--fix-ide" goto :OPT_FIX_IDE
 if /i "%~1"=="--fix-antigravity" goto :OPT_FIX_IDE
-if /i "%~1"=="--ide" goto :OPT_FIX_IDE
+if /i "%~1"=="--branch" goto :OPT_BRANCH
+if /i "%~1"=="--branches" goto :OPT_BRANCHES
+if /i "%~1"=="--sync-branches" goto :OPT_BRANCHES
+if /i "%~1"=="--doc" goto :OPT_DOCS
+if /i "%~1"=="--docs" goto :OPT_DOCS
 
 :MENU
 cls
@@ -43,10 +47,12 @@ echo  [8] Crear un nuevo alias y guardarlo en el repositorio
 echo  [9] Exportar / Sincronizar alias locales hacia el repositorio
 echo  [10] Iniciar Agent Bridge (Discord, auditoria paso a paso, guardia)
 echo  [11] Corregir doble ventana e historiales en Antigravity IDE
-echo  [12] Salir
+echo  [12] Gestionar o cambiar ramas de libros en epub-generator (PT, WIP, Main...)
+echo  [13] Ver documentacion del estado de ramas y libros trabajados (.md)
+echo  [14] Salir
 echo.
 echo ====================================================================
-set /p "CHOICE=Selecciona una opcion [1-12]: "
+set /p "CHOICE=Selecciona una opcion [1-14]: "
 
 if "%CHOICE%"=="1" goto :OPT_DEPS
 if "%CHOICE%"=="2" goto :OPT_BRAVE
@@ -59,7 +65,9 @@ if "%CHOICE%"=="8" goto :OPT_ADD_CUSTOM
 if "%CHOICE%"=="9" goto :OPT_EXPORT_ALIASES
 if "%CHOICE%"=="10" goto :OPT_AGENT
 if "%CHOICE%"=="11" goto :OPT_FIX_IDE
-if "%CHOICE%"=="12" goto :END
+if "%CHOICE%"=="12" goto :OPT_BRANCHES
+if "%CHOICE%"=="13" goto :OPT_DOCS
+if "%CHOICE%"=="14" goto :END
 echo.
 echo [!] Opcion invalida.
 timeout /t 2 >nul
@@ -202,6 +210,46 @@ if not "!PY_CMD!"=="" (
 echo [INFO] Aplicando configuracion mediante PowerShell (modo fallback)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\core\fix_antigravity_ide.ps1"
 exit /b 0
+
+
+:OPT_BRANCH
+call :FIND_PYTHON
+if not "!PY_CMD!"=="" (
+    if "%~2"=="" (
+        "!PY_CMD!" "%SCRIPT_DIR%\core\branch_manager.py"
+    ) else (
+        "!PY_CMD!" "%SCRIPT_DIR%\core\branch_manager.py" switch "%~2"
+    )
+    goto :END
+)
+echo [!] Se requiere Python para gestionar ramas.
+goto :END
+
+:OPT_BRANCHES
+call :FIND_PYTHON
+if not "!PY_CMD!"=="" (
+    "!PY_CMD!" "%SCRIPT_DIR%\core\branch_manager.py"
+    if not "%~1"=="" goto :END
+    pause
+    goto :MENU
+)
+echo [!] Se requiere Python para gestionar ramas.
+if not "%~1"=="" goto :END
+pause
+goto :MENU
+
+:OPT_DOCS
+call :FIND_PYTHON
+if not "!PY_CMD!"=="" (
+    "!PY_CMD!" "%SCRIPT_DIR%\core\branch_manager.py" doc
+    if not "%~1"=="" goto :END
+    pause
+    goto :MENU
+)
+type "%SCRIPT_DIR%\docs\branches_and_books_status.md"
+if not "%~1"=="" goto :END
+pause
+goto :MENU
 
 :END
 exit /b 0
