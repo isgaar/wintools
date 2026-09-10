@@ -15,7 +15,8 @@ windows-scripts/
 ├── core/
 │   ├── agent_hub.py                   # Orquestador del puente interactivo, control de pasos y seguridad
 │   ├── configure_cmd_aliases.bat      # Inyector de macros y ejecutables globales en Antigravity IDE/bin
-│   └── discord_tools.py               # Automatización Win32: enfoque, limpieza de buffer, pegado y envío en Discord
+│   ├── discord_tools.py               # Automatización Win32: enfoque, limpieza de buffer, pegado y envío en Discord
+│   └── fix_antigravity_ide.py         # Corrección de doble ventana y restauración de panel de agente en Antigravity IDE
 ├── installers/
 │   ├── install_epub_deps.bat          # Creador de .venv e instalador de dependencias de Python
 │   └── install_git.bat                # Verificador e instalador silencioso de Git
@@ -31,6 +32,7 @@ windows-scripts/
 | **`agent.bat`** | Raíz | Lanzador rápido del Agent Bridge para auditoría y control de pasos. |
 | **`agent_hub.py`** | `core/` | Motor Python: control paso a paso, puente Discord y guardia de commits. |
 | **`discord_tools.py`** | `core/` | Automatización de escritorio Win32: conexión a `winsta0\default`, pegado limpio y auto-envío en Discord. |
+| **`fix_antigravity_ide.py`** | `core/` | Previene la doble ventana y restaura la visibilidad del panel del agente en Antigravity IDE. |
 | **`configure_cmd_aliases.bat`** | `core/` | Registra macros persistentes en CMD y ejecutables globales (`agent`, `epub`, `ag`). |
 | **`install_epub_deps.bat`** | `installers/` | Crea `.venv` e instala dependencias de `epub-generator`. |
 | **`install_git.bat`** | `installers/` | Verifica y descarga Git para Windows. |
@@ -97,6 +99,7 @@ setup_all.bat --list-aliases    # Muestra los alias configurados y sus rutas por
 setup_all.bat --git             # Solo verifica/instala Git
 setup_all.bat --aliases         # Solo alias (aplica y sincroniza todos)
 setup_all.bat --agent           # Inicia Agent Bridge directamente
+setup_all.bat --fix-ide         # Corrige la doble ventana y restaura historiales del agente
 ```
 
 ---

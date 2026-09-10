@@ -22,6 +22,9 @@ if /i "%~1"=="--list-aliases" goto :OPT_LIST_ALIASES
 if /i "%~1"=="--clean-locks" goto :OPT_CLEAN_LOCKS
 if /i "%~1"=="--unlock" goto :OPT_CLEAN_LOCKS
 if /i "%~1"=="--agent" goto :OPT_AGENT
+if /i "%~1"=="--fix-ide" goto :OPT_FIX_IDE
+if /i "%~1"=="--fix-antigravity" goto :OPT_FIX_IDE
+if /i "%~1"=="--ide" goto :OPT_FIX_IDE
 
 :MENU
 cls
@@ -34,15 +37,16 @@ echo  [2] Instalar o verificar Brave Browser (Requerido para traducciones)
 echo  [3] Instalar o verificar Gemini CLI (Antigravity CLI / agy)
 echo  [4] Instalar o verificar Git para Windows
 echo  [5] Configurar o importar todos los alias (orch, agyd, ag, epub...)
-echo  [6] Realizar TODO (Git + Brave + Gemini CLI + Deps + Alias) [Equipo nuevo]
+echo  [6] Realizar TODO (Git + Brave + Gemini CLI + Deps + Alias + Fix IDE) [Equipo nuevo]
 echo  [7] Limpiar archivos de bloqueo huerfanos (.lock) del orquestador
 echo  [8] Crear un nuevo alias y guardarlo en el repositorio
 echo  [9] Exportar / Sincronizar alias locales hacia el repositorio
 echo  [10] Iniciar Agent Bridge (Discord, auditoria paso a paso, guardia)
-echo  [11] Salir
+echo  [11] Corregir doble ventana e historiales en Antigravity IDE
+echo  [12] Salir
 echo.
 echo ====================================================================
-set /p "CHOICE=Selecciona una opcion [1-11]: "
+set /p "CHOICE=Selecciona una opcion [1-12]: "
 
 if "%CHOICE%"=="1" goto :OPT_DEPS
 if "%CHOICE%"=="2" goto :OPT_BRAVE
@@ -54,7 +58,8 @@ if "%CHOICE%"=="7" goto :OPT_CLEAN_LOCKS
 if "%CHOICE%"=="8" goto :OPT_ADD_CUSTOM
 if "%CHOICE%"=="9" goto :OPT_EXPORT_ALIASES
 if "%CHOICE%"=="10" goto :OPT_AGENT
-if "%CHOICE%"=="11" goto :END
+if "%CHOICE%"=="11" goto :OPT_FIX_IDE
+if "%CHOICE%"=="12" goto :END
 echo.
 echo [!] Opcion invalida.
 timeout /t 2 >nul
@@ -66,6 +71,7 @@ call "%SCRIPT_DIR%\installers\install_brave.bat" --nopause
 call "%SCRIPT_DIR%\installers\install_gemini_cli.bat" --nopause
 call "%SCRIPT_DIR%\installers\install_epub_deps.bat"
 call "%SCRIPT_DIR%\core\configure_cmd_aliases.bat" --nopause
+call :SUB_FIX_IDE --nopause
 goto :END
 
 :OPT_DEPS
@@ -174,6 +180,28 @@ echo.
 echo.
 pause
 goto :MENU
+
+:OPT_FIX_IDE
+call :SUB_FIX_IDE
+if not "%~1"=="" goto :END
+pause
+goto :MENU
+
+:SUB_FIX_IDE
+echo.
+echo ====================================================================
+echo    CORRECCION DE DOBLE VENTANA E HISTORIALES EN ANTIGRAVITY IDE
+echo ====================================================================
+echo.
+call :FIND_PYTHON
+if not "!PY_CMD!"=="" (
+    "!PY_CMD!" "%SCRIPT_DIR%\core\fix_antigravity_ide.py"
+    exit /b 0
+)
+
+echo [INFO] Aplicando configuracion mediante PowerShell (modo fallback)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\core\fix_antigravity_ide.ps1"
+exit /b 0
 
 :END
 exit /b 0
